@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  activity_highlight_viewer.xml
+  Full-screen highlight viewer:
+    AppBarLayout (title + close + delete/add-media for teachers)
+    ImageView for images + VideoView for videos
+    Left/Right tap zones
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Media views -->
+    <ImageView
+        android:id="@+id/hv_ivImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="Highlight image"
+        android:scaleType="fitCenter" />
+
+    <VideoView
+        android:id="@+id/hv_vvVideo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <!-- Progress bars -->
+    <LinearLayout
+        android:id="@+id/hv_llProgressBars"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="56dp"
+        android:paddingBottom="8dp" />
+
+    <!-- Top bar: back + title + add media (teacher) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp">
+
+        <ImageButton
+            android:id="@+id/hv_btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Back"
+            android:src="@drawable/ic_back_arrow"
+            android:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/hv_tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000"
+            android:shadowRadius="3" />
+
+        <!-- Teacher: add more media -->
+        <ImageButton
+            android:id="@+id/hv_btnAddMedia"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Add media"
+            android:src="@drawable/ic_attach"
+            android:tint="@color/white"
+            android:visibility="gone" />
+
+        <!-- Teacher: delete current media -->
+        <ImageButton
+            android:id="@+id/hv_btnDeleteMedia"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Delete media"
+            android:src="@drawable/ic_delete"
+            android:tint="@color/white"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Left/right tap zones -->
+    <View
+        android:id="@+id/hv_tapLeft"
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start" />
+
+    <View
+        android:id="@+id/hv_tapRight"
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end" />
+
+    <!-- Empty state -->
+    <TextView
+        android:id="@+id/hv_tvEmpty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="No media in this highlight"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
+</FrameLayout>

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  activity_story_viewer.xml
+  Full-screen story viewer with:
+    - ImageView (photos)
+    - VideoView (videos)
+    - Instagram-style progress bar strip at top
+    - Teacher name overlay (for college stories)
+    - Left / Right tap zones for skip
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Photo display -->
+    <ImageView
+        android:id="@+id/ivStoryImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="Story image"
+        android:scaleType="fitCenter"
+        android:visibility="visible" />
+
+    <!-- Video display -->
+    <VideoView
+        android:id="@+id/vvStoryVideo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <!-- ── Overlay content ─────────────────────────────────────────── -->
+
+    <!-- Progress bars strip (top) -->
+    <LinearLayout
+        android:id="@+id/llProgressBars"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="8dp"
+        android:gravity="center_vertical" />
+
+    <!-- Teacher name / story info (top, below progress bars) -->
+    <LinearLayout
+        android:id="@+id/llStoryInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="80dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/tvUploaderName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
+
+        <!-- Relative upload time, e.g. "· 5m ago" -->
+        <TextView
+            android:id="@+id/tvTimestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:textColor="#CCffffff"
+            android:textSize="12sp"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Left tap zone (go to previous) -->
+    <View
+        android:id="@+id/tapLeft"
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start" />
+
+    <!-- Right tap zone (go to next) -->
+    <View
+        android:id="@+id/tapRight"
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end" />
+
+    <!-- Close button -->
+    <ImageView
+        android:id="@+id/btnClose"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="12dp"
+        android:contentDescription="Close"
+        android:padding="8dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="@color/white" />
+
+    <!-- Uploader Controls (Bottom, hidden by default) -->
+    <LinearLayout
+        android:id="@+id/llUploaderControls"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="#66000000"
+        android:visibility="gone">
+
+        <!-- Viewers Button + Count -->
+        <LinearLayout
+            android:id="@+id/btnViewers"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?selectableItemBackground">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👁"
+                android:textSize="20sp"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/tvViewCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="Viewers"
+                android:textColor="#CCffffff"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Delete Button -->
+        <ImageView
+            android:id="@+id/btnDeleteStory"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="@color/white"
+            android:contentDescription="Delete story"
+            android:background="?selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+</FrameLayout>

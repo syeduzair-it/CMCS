@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chat list row item.
+
+  Structure:
+  ConstraintLayout
+    ├── CircleImageView       – avatar (left)
+    ├── TextView  name        – bold, 16sp
+    ├── TextView  lastMessage – ellipsized, 14sp, secondary color
+    ├── TextView  timestamp   – right-aligned, 12sp
+    ├── TextView  unread badge– filled purple circle (GONE by default)
+    └── TextView  teacher badge – purple pill, visible only for teacher chats
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <!-- Avatar -->
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/item_avatar"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:src="@drawable/ic_user"
+        app:civ_border_color="@color/surfaceElevated"
+        app:civ_border_width="1.5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Name -->
+    <TextView
+        android:id="@+id/item_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/textPrimary"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@id/item_timestamp"
+        app:layout_constraintStart_toEndOf="@id/item_avatar"
+        app:layout_constraintTop_toTopOf="@id/item_avatar"
+        tools:text="Ahmad Raza" />
+
+    <!-- Teacher badge (visible only when other user is a teacher) -->
+    <TextView
+        android:id="@+id/item_teacher_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:background="@drawable/badge_teacher_bg"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp"
+        android:text="Teacher"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/item_name"
+        app:layout_constraintStart_toEndOf="@id/item_name"
+        app:layout_constraintTop_toTopOf="@id/item_name" />
+
+    <!-- Last message preview -->
+    <TextView
+        android:id="@+id/item_last_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/textSecondary"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="@id/item_avatar"
+        app:layout_constraintEnd_toStartOf="@id/item_unread_badge"
+        app:layout_constraintStart_toEndOf="@id/item_avatar"
+        app:layout_constraintTop_toBottomOf="@id/item_name"
+        tools:text="Okay, see you tomorrow!" />
+
+    <!-- Timestamp (top-right) -->
+    <TextView
+        android:id="@+id/item_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textSecondary"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/item_name"
+        tools:text="10:45" />
+
+    <!-- Unread count badge (bottom-right) -->
+    <TextView
+        android:id="@+id/item_unread_badge"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/badge_unread_bg"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/item_avatar"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="3"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

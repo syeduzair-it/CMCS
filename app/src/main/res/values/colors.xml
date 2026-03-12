@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Primary Colors (Purple) -->
+    <color name="colorPrimary">#7C4DFF</color>          <!-- Vibrant Purple -->
+    <color name="colorPrimaryVariant">#651FFF</color>   <!-- Deeper Purple -->
+    <color name="colorAccent">#B388FF</color>           <!-- Light Purple accent -->
+
+    <!-- Background & Surface — LIGHT theme -->
+    <color name="backgroundColor">#FFFFFF</color>       <!-- Pure White -->
+    <color name="surfaceColor">#F5F0FF</color>          <!-- Very light purple tint (cards, nav) -->
+    <color name="surfaceElevated">#EDE7F6</color>       <!-- Slightly deeper for elevation -->
+
+    <!-- Text Colors -->
+    <color name="textPrimary">#1A1A2E</color>           <!-- Dark navy for readability -->
+    <color name="textSecondary">#5C5C7A</color>         <!-- Muted purple-grey -->
+
+    <!-- Chat Bubbles -->
+    <color name="chatBubbleMe">#7C4DFF</color>          <!-- Purple bubble (me) -->
+    <color name="chatBubbleOther">#EDE7F6</color>       <!-- Light bubble (others) -->
+
+    <!-- Bottom Navigation -->
+    <color name="navSelected">#7C4DFF</color>           <!-- Active icon — vibrant purple -->
+    <color name="navUnselected">#BDBDBD</color>         <!-- Inactive icons — light grey -->
+
+    <!-- FAB and Highlight -->
+    <color name="fabColor">#7C4DFF</color>
+    <color name="highlightColor">#B388FF</color>
+
+    <!-- Divider / Borders -->
+    <color name="dividerColor">#E0D7F9</color>          <!-- Soft purple divider -->
+
+    <color name="lightPurple">#EDE7F6</color>
+    <color name="darkPurple">#651FFF</color>
+    <color name="lightGray">#BDBDBD</color>
+
+    <!-- Message status dot colors -->
+    <color name="statusDelivered">#F44336</color>   <!-- Red  = delivered -->
+    <color name="statusRead">#4CAF50</color>         <!-- Green = read -->
+
+    <!-- Error/Destructive Colors -->
+    <color name="errorColor">#FF5252</color>
+
+</resources>

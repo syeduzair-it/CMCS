@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "596646783803",
+    "firebase_url": "https://cmcs-app-default-rtdb.firebaseio.com",
+    "project_id": "cmcs-app",
+    "storage_bucket": "cmcs-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596646783803:android:6ef1f7d189026c751f251e",
+        "android_client_info": {
+          "package_name": "com.example.cmcs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsYsKW8guwJYDSRHF6e57Wn4WdRlRq-RQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

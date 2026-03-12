@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/backgroundOtp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/login_bg"
+        android:scaleType="centerCrop" />
+
+    <!-- Foreground -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:layout_marginTop="200dp">
+
+            <!-- CardView for OTP input -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="6dp"
+                android:layout_margin="16dp"
+                android:backgroundTint="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <!-- Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="24dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:id="@+id/backArrow"
+                            android:src="@drawable/ic_back_arrow"
+                            android:contentDescription="Back"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Enter OTP"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorPrimary" />
+                    </LinearLayout>
+
+                    <!-- OTP boxes -->
+                    <LinearLayout
+                        android:id="@+id/otpContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <EditText
+                            android:id="@+id/otp1"
+                            style="@style/OtpBox" />
+                        <EditText
+                            android:id="@+id/otp2"
+                            style="@style/OtpBox" />
+                        <EditText
+                            android:id="@+id/otp3"
+                            style="@style/OtpBox" />
+                        <EditText
+                            android:id="@+id/otp4"
+                            style="@style/OtpBox" />
+                        <EditText
+                            android:id="@+id/otp5"
+                            style="@style/OtpBox" />
+                        <EditText
+                            android:id="@+id/otp6"
+                            style="@style/OtpBox" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="24dp" >
+                    <!-- Resend -->
+                    <TextView
+                        android:id="@+id/resendOtpText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Did not receive? RESEND"
+                        android:textColor="@color/colorAccent"
+                        android:textStyle="bold"
+                        android:layout_gravity="center_vertical"
+                        />
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:id="@+id/resendIcon"
+                        android:src="@drawable/ic_refresh"
+                        android:layout_gravity="center_vertical"
+                        android:contentDescription="Resend"
+                        app:tint="@color/colorAccent"
+                        android:layout_marginLeft="10dp"/>
+                    </LinearLayout>
+                    <!-- Submit button -->
+                    <Button
+                        android:id="@+id/submitOtpButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="SUBMIT"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"
+                        android:backgroundTint="@color/colorPrimary" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

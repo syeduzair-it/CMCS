@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  item_story.xml
+  Single story circle in the horizontal feed.
+  Used for all 3 types: TYPE_ADD_STORY, TYPE_ADD_COLLEGE, TYPE_STORY.
+  Specific content is set by StoryAdapter at bind time.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <!-- Story circle / upload button ring -->
+    <FrameLayout
+        android:layout_width="72dp"
+        android:layout_height="72dp">
+
+        <!-- Gradient ring (visible for real stories, coloured for uploaders) -->
+        <View
+            android:id="@+id/storyRing"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/story_ring_gradient" />
+
+        <!-- Story thumbnail / icon -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivStoryThumb"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop" />
+
+        <!-- Add "+" badge, shown for upload buttons -->
+        <TextView
+            android:id="@+id/tvAddBadge"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="2dp"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text="+"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- Label below the circle -->
+    <TextView
+        android:id="@+id/tvStoryLabel"
+        android:layout_width="72dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/textPrimary"
+        android:textSize="11sp" />
+
+</LinearLayout>

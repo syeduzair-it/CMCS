@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  Received message row (left-aligned)  -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_message_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="start"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="56dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <!-- Bubble card -->
+        <LinearLayout
+            android:id="@+id/bubble_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bubble_received"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="6dp">
+
+            <!-- Forwarded Indicator -->
+            <TextView
+                android:id="@+id/tv_forwarded"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Forwarded"
+                android:textColor="@color/textSecondary"
+                android:textSize="10sp"
+                android:textStyle="italic"
+                android:drawableStart="@drawable/ic_forward"
+                android:drawablePadding="4dp"
+                android:drawableTint="@color/textSecondary"
+                android:visibility="gone"
+                android:layout_marginBottom="4dp" />
+
+            <!-- Reply Block -->
+            <LinearLayout
+                android:id="@+id/layout_reply"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#20000000"
+                android:padding="6dp"
+                android:layout_marginBottom="6dp"
+                android:visibility="gone">
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/colorPrimary"
+                    android:layout_marginEnd="6dp" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Replying to:"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tv_reply_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxWidth="220dp"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:textColor="@color/textSecondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Message text -->
+            <TextView
+                android:id="@+id/tv_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxWidth="260dp"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp"
+                android:lineSpacingMultiplier="1.2" />
+
+            <!-- Timestamp -->
+            <TextView
+                android:id="@+id/tv_timestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/textSecondary"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gradient ring for story circles — purple-to-pink Instagram style -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:startColor="#833ab4"
+        android:centerColor="#F2E6F4"
+        android:endColor="#9C27B0"
+        android:gradientRadius="50%p"
+        android:type="sweep" />
+</shape>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  toolbar_cmcs.xml
+  Shared CMCS standard toolbar used by ChatsFragment and MeFragment.
+  Contains: hamburger navigation icon (id=ivMenuIcon), "CMCS" title.
+  White background, matching TextAppearance.Chat.Toolbar style.
+-->
+<com.google.android.material.appbar.AppBarLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cmcsAppBarLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:backgroundTint="@color/white"
+    app:elevation="0dp">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/cmcsToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/white"
+        app:navigationIcon="@drawable/ic_menu"
+        app:title="CMCS"
+        app:titleTextColor="@color/textPrimary"
+        app:titleTextAppearance="@style/TextAppearance.Chat.Toolbar" />
+
+</com.google.android.material.appbar.AppBarLayout>

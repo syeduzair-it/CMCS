@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  fragment_me.xml
+
+  Root: DrawerLayout  (mirrors ChatsFragment architecture exactly)
+  ├─ CoordinatorLayout (main content)
+  │    ├─ AppBarLayout → included toolbar_cmcs (hamburger + "CMCS" title)
+  │    └─ NestedScrollView (scrolls under AppBar)
+  │         └─ LinearLayout (vertical)
+  │              ├─ CardView  (profile: avatar, name, badge, email, dept/year)
+  │              └─ RecyclerView (role-based menu)
+  └─ NavigationView (drawer, slides from start/left)
+       ├─ headerLayout → nav_header.xml
+       └─ menu → drawer_menu.xml
+-->
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/me_drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".fragments.MeFragment">
+
+    <!-- ════════════════════════════════════════
+         MAIN CONTENT
+         ════════════════════════════════════════ -->
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/backgroundColor">
+
+        <!-- CMCS Standard Toolbar (shared with Chats) -->
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/me_app_bar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/white"
+            app:elevation="0dp">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/me_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/white"
+                app:navigationIcon="@drawable/ic_menu"
+                app:title="CMCS"
+                app:titleTextColor="@color/textPrimary"
+                app:titleTextAppearance="@style/TextAppearance.Chat.Toolbar" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <!-- Scrollable content sits below the AppBar -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- ─── Profile Card ─────────────────────── -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    app:cardBackgroundColor="@color/surfaceColor"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <!-- Avatar + edit overlay -->
+                        <FrameLayout
+                            android:layout_width="100dp"
+                            android:layout_height="100dp">
+
+                            <de.hdodenhof.circleimageview.CircleImageView
+                                android:id="@+id/ivProfileImage"
+                                android:layout_width="100dp"
+                                android:layout_height="100dp"
+                                android:src="@drawable/ic_user"
+                                app:civ_border_color="@color/colorPrimary"
+                                app:civ_border_width="2dp" />
+
+                            <ProgressBar
+                                android:id="@+id/pbUpload"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_gravity="center"
+                                android:indeterminateTint="@color/colorPrimary"
+                                android:visibility="gone" />
+
+                            <ImageButton
+                                android:id="@+id/btnEditProfileImage"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_gravity="bottom|end"
+                                android:background="@color/colorPrimary"
+                                android:contentDescription="Edit profile image"
+                                android:padding="5dp"
+                                android:src="@drawable/ic_edit" />
+
+                        </FrameLayout>
+
+                        <!-- Name -->
+                        <TextView
+                            android:id="@+id/tvName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:textColor="@color/textPrimary"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="John Doe" />
+
+                        <!-- Role badge — teacher only -->
+                        <TextView
+                            android:id="@+id/tvBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/badge_teacher_bg"
+                            android:paddingStart="10dp"
+                            android:paddingTop="2dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="2dp"
+                            android:text="Teacher"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+
+                        <!-- Email -->
+                        <TextView
+                            android:id="@+id/tvEmail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textColor="@color/textSecondary"
+                            android:textSize="14sp"
+                            tools:text="john@example.com" />
+
+                        <!-- Department (teacher) / Year (student) -->
+                        <TextView
+                            android:id="@+id/tvDepartmentOrYear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textColor="@color/textSecondary"
+                            android:textSize="13sp"
+                            tools:text="Year: 2" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@color/dividerColor" />
+
+                <!-- ─── Role-based Menu RecyclerView ───── -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:nestedScrollingEnabled="false"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/item_me_menu" />
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <!-- ════════════════════════════════════════
+         NAVIGATION DRAWER (same as ChatsFragment)
+         ════════════════════════════════════════ -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/me_navigation_view"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/white"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header"
+        app:itemBackground="@drawable/drawer_item_background"
+        app:itemIconTint="@color/nav_item_color"
+        app:itemTextColor="@color/nav_item_color"
+        app:menu="@menu/drawer_menu" />
+
+</androidx.drawerlayout.widget.DrawerLayout>

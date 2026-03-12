@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_mark_present"
+        android:title="Mark Present"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_mark_absent"
+        android:title="Mark Absent"
+        app:showAsAction="ifRoom" />
+</menu>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Compose / New Chat icon for the FAB -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@android:color/white">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M11,17h2v-4h4v-2h-4V7h-2v4H7v2h4v4zm1,5q-2.075,0 -3.9,-0.788t-3.175,-2.137q-1.35,-1.35 -2.137,-3.175T2,12q0,-2.075 0.788,-3.9t2.137,-3.175q1.35,-1.35 3.175,-2.138T12,2q2.075,0 3.9,0.788t3.175,2.137q1.35,1.35 2.138,3.175T22,12q0,2.075 -0.788,3.9t-2.137,3.175q-1.35,1.35 -3.175,2.138T12,22z" />
+</vector>

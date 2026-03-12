@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Private internal storage: getFilesDir()/marksheets/ -->
+    <files-path
+        name="marksheets"
+        path="marksheets/" />
+</paths>

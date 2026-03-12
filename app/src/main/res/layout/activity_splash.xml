@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/splashLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <!-- College Logo -->
+    <ImageView
+        android:id="@+id/logoImageView"
+        android:layout_width="@dimen/_267sdp"
+        android:layout_height="@dimen/_123sdp"
+        android:layout_centerInParent="true"
+        android:contentDescription="App Logo"
+        android:scaleType="centerCrop"
+        android:src="@drawable/cmcs_logo" />
+
+    <!-- App Name -->
+    <TextView
+        android:id="@+id/appNameTextView"
+        android:layout_width="@dimen/_258sdp"
+        android:layout_height="@dimen/_130sdp"
+        android:layout_below="@id/logoImageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/_24sdp"
+        android:gravity="center"
+        android:text="College Of Management And Computer Science"
+        android:textColor="#241371"
+        android:textSize="@dimen/_24ssp"
+        android:textStyle="bold" />
+
+    <!-- Powered by line (optional) -->
+    <TextView
+        android:id="@+id/poweredByTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Powered by Syed Uzair"
+        android:textColor="#241371"
+        android:textSize="@dimen/_11ssp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="@dimen/_24sdp" />
+</RelativeLayout>
