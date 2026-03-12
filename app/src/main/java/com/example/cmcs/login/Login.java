@@ -194,15 +194,9 @@ public class Login extends AppCompatActivity {
 
                                 // First time → Set Password
                                 Intent intent = new Intent(Login.this, SetPassword.class);
+                                intent.putExtra("userType", loginRole);
+                                intent.putExtra("userKey", userSnap.getKey());
                                 intent.putExtra("email", email);
-
-                                if ("teacher".equals(loginRole)) {
-                                    intent.putExtra("userType", "teacher");
-                                    intent.putExtra("teacherKey", userSnap.getKey());
-                                } else {
-                                    intent.putExtra("userType", "student");
-                                    intent.putExtra("studentKey", userSnap.getKey());
-                                }
 
                                 startActivity(intent);
 

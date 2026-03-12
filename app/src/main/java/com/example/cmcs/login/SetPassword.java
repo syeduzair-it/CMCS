@@ -28,12 +28,7 @@ public class SetPassword extends AppCompatActivity {
     // Common
     String userType; // "student" or "teacher"
     String email;
-
-    // Student-specific
-    String studentKey;
-
-    // Teacher-specific
-    String teacherKey;
+    String userKey;  // push-key from students/ or teachers/ node
 
     FirebaseAuth mAuth;
     DatabaseReference dbRef;
@@ -53,8 +48,7 @@ public class SetPassword extends AppCompatActivity {
         // Read intent extras
         userType = getIntent().getStringExtra("userType");
         email = getIntent().getStringExtra("email");
-        studentKey = getIntent().getStringExtra("studentKey");
-        teacherKey = getIntent().getStringExtra("teacherKey");
+        userKey = getIntent().getStringExtra("userKey");
 
         // Default to student if not provided (backward compat)
         if (userType == null) {
@@ -115,7 +109,7 @@ public class SetPassword extends AppCompatActivity {
 
     // ── STUDENT ──────────────────────────────────────────────────────────────
     private void handleStudentAccountReady(String authUid) {
-        DatabaseReference studentRef = dbRef.child("students").child(studentKey);
+        DatabaseReference studentRef = dbRef.child("students").child(userKey);
         studentRef.child("accountCreated").setValue(true);
         studentRef.child("authUid").setValue(authUid);
 
@@ -167,7 +161,7 @@ public class SetPassword extends AppCompatActivity {
 
     // ── TEACHER ──────────────────────────────────────────────────────────────
     private void handleTeacherAccountReady(String authUid) {
-        DatabaseReference teacherRef = dbRef.child("teachers").child(teacherKey);
+        DatabaseReference teacherRef = dbRef.child("teachers").child(userKey);
         teacherRef.child("authUid").setValue(authUid);
         teacherRef.child("accountCreated").setValue(true);
 
