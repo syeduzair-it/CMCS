@@ -170,6 +170,11 @@ public class Login extends AppCompatActivity {
     private void handleFirstTimeOrForgot(String email) {
         String node = "teacher".equals(loginRole) ? "teachers" : "students";
 
+        android.util.Log.d("LoginDebug", "handleFirstTimeOrForgot:"
+                + " loginRole=" + loginRole
+                + ", node=" + node
+                + ", email=" + email);
+
         dbRef.child(node)
                 .orderByChild("email")
                 .equalTo(email)
@@ -177,6 +182,9 @@ public class Login extends AppCompatActivity {
 
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                        android.util.Log.d("LoginDebug",
+                                "snapshot.exists()=" + snapshot.exists());
 
                         if (!snapshot.exists()) {
                             Toast.makeText(Login.this,
@@ -187,21 +195,23 @@ public class Login extends AppCompatActivity {
 
                         for (DataSnapshot userSnap : snapshot.getChildren()) {
 
-                            Boolean accountCreated
-                                    = userSnap.child("accountCreated").getValue(Boolean.class);
+                            Object raw = userSnap.child("accountCreated").getValue();
+                            boolean accountCreated = raw != null
+                                    && Boolean.parseBoolean(raw.toString());
 
-                            if (accountCreated == null || !accountCreated) {
+                            android.util.Log.d("LoginDebug",
+                                    "Found key=" + userSnap.getKey()
+                                    + ", accountCreated=" + accountCreated);
 
+                            if (!accountCreated) {
                                 // First time → Set Password
                                 Intent intent = new Intent(Login.this, SetPassword.class);
                                 intent.putExtra("userType", loginRole);
                                 intent.putExtra("userKey", userSnap.getKey());
                                 intent.putExtra("email", email);
-
                                 startActivity(intent);
 
                             } else {
-
                                 // Forgot password → send reset email
                                 mAuth.sendPasswordResetEmail(email)
                                         .addOnCompleteListener(task -> {

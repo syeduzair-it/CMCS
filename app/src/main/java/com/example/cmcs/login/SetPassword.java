@@ -28,7 +28,7 @@ public class SetPassword extends AppCompatActivity {
     // Common
     String userType; // "student" or "teacher"
     String email;
-    String userKey;  // push-key from students/ or teachers/ node
+    String userKey;  // push-key from students/ or teachers/ node (unified)
 
     FirebaseAuth mAuth;
     DatabaseReference dbRef;
@@ -109,11 +109,12 @@ public class SetPassword extends AppCompatActivity {
 
     // ── STUDENT ──────────────────────────────────────────────────────────────
     private void handleStudentAccountReady(String authUid) {
-        DatabaseReference studentRef = dbRef.child("students").child(userKey);
-        studentRef.child("accountCreated").setValue(true);
-        studentRef.child("authUid").setValue(authUid);
+        String node = "teacher".equals(userType) ? "teachers" : "students";
+        DatabaseReference recordRef = dbRef.child(node).child(userKey);
+        recordRef.child("accountCreated").setValue(true);
+        recordRef.child("authUid").setValue(authUid);
 
-        studentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        recordRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String name = snapshot.child("name").getValue(String.class);
@@ -160,12 +161,15 @@ public class SetPassword extends AppCompatActivity {
     }
 
     // ── TEACHER ──────────────────────────────────────────────────────────────
+    // Note: handleTeacherAccountReady is kept for backward compat but now both
+    // roles share the same node-derived path via handleStudentAccountReady.
     private void handleTeacherAccountReady(String authUid) {
-        DatabaseReference teacherRef = dbRef.child("teachers").child(userKey);
-        teacherRef.child("authUid").setValue(authUid);
-        teacherRef.child("accountCreated").setValue(true);
+        String node = "teacher".equals(userType) ? "teachers" : "students";
+        DatabaseReference recordRef = dbRef.child(node).child(userKey);
+        recordRef.child("authUid").setValue(authUid);
+        recordRef.child("accountCreated").setValue(true);
 
-        teacherRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        recordRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String name = snapshot.child("name").getValue(String.class);
