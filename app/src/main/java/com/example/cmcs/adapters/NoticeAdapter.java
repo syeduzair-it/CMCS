@@ -16,9 +16,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.cmcs.AddNoticeActivity;
+import com.example.cmcs.NoticeViewersActivity;
 import com.example.cmcs.R;
 import com.example.cmcs.models.NoticeModel;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -77,6 +81,31 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
             h.btnEdit.setOnClickListener(v -> openEditScreen(n));
             h.btnDelete.setOnClickListener(v -> confirmDelete(n));
         }
+
+        // ── View tracking ──────────────────────────────────────────────────
+        if ("teacher".equalsIgnoreCase(currentRole)) {
+            // Teachers see the live view count (single read, refreshed on each bind)
+            h.llViewRow.setVisibility(View.VISIBLE);
+            loadViewCount(h, n.getNoticeId());
+
+            // Tap to open viewer list
+            h.llViewRow.setOnClickListener(v -> {
+                Intent intent = new Intent(context, NoticeViewersActivity.class);
+                intent.putExtra(NoticeViewersActivity.EXTRA_NOTICE_ID, n.getNoticeId());
+                intent.putExtra(NoticeViewersActivity.EXTRA_NOTICE_TITLE,
+                        n.getTitle() != null ? n.getTitle() : "Notice");
+                context.startActivity(intent);
+            });
+
+        } else {
+            // Students: hide the view count row entirely
+            h.llViewRow.setVisibility(View.GONE);
+            h.llViewRow.setOnClickListener(null);
+
+            // Record view on card tap (once per student — Firebase ignores duplicate writes
+            // because the student UID key already exists with the same value `true`)
+            h.itemView.setOnClickListener(v -> recordStudentView(n.getNoticeId()));
+        }
     }
 
     @Override
@@ -84,7 +113,58 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
         return notices.size();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────
+    // ── View tracking helpers ─────────────────────────────────────────────
+    /**
+     * Single read of noticeViews/{noticeId} → count children → update chip.
+     * Using addListenerForSingleValueEvent avoids keeping persistent listeners
+     * for every visible notice card (important for ~1500 active users).
+     */
+    private void loadViewCount(@NonNull NoticeViewHolder h, String noticeId) {
+        if (noticeId == null || noticeId.isEmpty()) {
+            return;
+        }
+
+        FirebaseDatabase.getInstance()
+                .getReference("noticeViews")
+                .child(noticeId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        long count = snapshot.getChildrenCount();
+                        h.tvViewCount.setText("\uD83D\uDC41 " + count + (count == 1 ? " view" : " views"));
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        // Keep showing 0; no crash
+                    }
+                });
+    }
+
+    /**
+     * Record that the current student has viewed this notice. Using the student
+     * UID as the key guarantees no duplicates — a second setValue(true) on an
+     * existing key is a no-op in RTDB. Teacher views are never recorded.
+     */
+    private void recordStudentView(String noticeId) {
+        if (noticeId == null || noticeId.isEmpty()) {
+            return;
+        }
+        if (currentUid == null || currentUid.isEmpty()) {
+            return;
+        }
+        if (!"student".equalsIgnoreCase(currentRole)) {
+            return;
+        }
+
+        FirebaseDatabase.getInstance()
+                .getReference("noticeViews")
+                .child(noticeId)
+                .child(currentUid)
+                .setValue(true);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
     private void bindMedia(@NonNull NoticeViewHolder h, NoticeModel n) {
         String type = n.getMediaType();
         if (type == null || type.equals("text") || n.getMediaUrl() == null || n.getMediaUrl().isEmpty()) {
@@ -173,12 +253,13 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
         return new SimpleDateFormat("d MMM", Locale.getDefault()).format(new Date(millis));
     }
 
-    // ── ViewHolder ───────────────────────────────────────────────────────
+    // ── ViewHolder ────────────────────────────────────────────────────────
     static class NoticeViewHolder extends RecyclerView.ViewHolder {
 
         TextView tvCreatorName, tvTimestamp, tvTitle, tvDescription, tvEdited, tvMediaLabel;
+        TextView tvViewCount;
         ImageView ivImagePreview, ivMediaIcon;
-        LinearLayout nonImagePreview, actionRow;
+        LinearLayout nonImagePreview, actionRow, llViewRow;
         View mediaPreviewContainer;
         ImageButton btnEdit, btnDelete;
 
@@ -197,6 +278,8 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
             actionRow = v.findViewById(R.id.actionRow);
             btnEdit = v.findViewById(R.id.btnEdit);
             btnDelete = v.findViewById(R.id.btnDelete);
+            llViewRow = v.findViewById(R.id.llViewRow);
+            tvViewCount = v.findViewById(R.id.tvViewCount);
         }
     }
 }

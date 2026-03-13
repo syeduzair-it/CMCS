@@ -59,7 +59,7 @@ public class Login extends AppCompatActivity {
     // Entry point
     // ─────────────────────────────────────────────────────────────────────────
     private void handleLogin() {
-        String email = inputEmail.getText().toString().trim();
+        String email = inputEmail.getText().toString().trim().toLowerCase();
         String password = inputPassword.getText().toString().trim();
         boolean isFirstOrForgot = forgotSwitch.isChecked();
 
@@ -170,74 +170,101 @@ public class Login extends AppCompatActivity {
     private void handleFirstTimeOrForgot(String email) {
         String node = "teacher".equals(loginRole) ? "teachers" : "students";
 
+        // Normalize once — all comparisons use this
+        String emailNormalized = email.trim().toLowerCase();
+
         android.util.Log.d("LoginDebug", "handleFirstTimeOrForgot:"
                 + " loginRole=" + loginRole
                 + ", node=" + node
-                + ", email=" + email);
+                + ", emailNormalized=" + emailNormalized);
 
-        dbRef.child(node)
-                .orderByChild("email")
-                .equalTo(email)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
+        // ── Full-node scan with Java-side case-insensitive match ──────────────
+        // Firebase orderByChild().equalTo() is case-sensitive (exact bytes).
+        // If AdminCMCS saved email as "User5@gmail.com", querying for
+        // "user5@gmail.com" returns snapshot.exists()=false even though the
+        // record is there. Scanning all records and comparing after
+        // trim().toLowerCase() in Java is the only safe approach.
+        // keepSynced(true) forces a fresh server fetch, bypassing the disk-persistence
+        // cache that setPersistenceEnabled(true) maintains. Without this, the scan only
+        // sees the stale cached snapshot (e.g., 5 records when Firebase has 8).
+        DatabaseReference nodeRef = dbRef.child(node);
+        nodeRef.keepSynced(true);
 
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+        nodeRef.addListenerForSingleValueEvent(new ValueEventListener() {
 
-                        android.util.Log.d("LoginDebug",
-                                "snapshot.exists()=" + snapshot.exists());
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                        if (!snapshot.exists()) {
-                            Toast.makeText(Login.this,
-                                    "You are not authorized. Contact Admin.",
-                                    Toast.LENGTH_LONG).show();
-                            return;
-                        }
+                android.util.Log.d("LoginDebug",
+                        "Total records in " + node + ": " + snapshot.getChildrenCount());
 
-                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                DataSnapshot matchedSnap = null;
 
-                            Object raw = userSnap.child("accountCreated").getValue();
-                            boolean accountCreated = raw != null
-                                    && Boolean.parseBoolean(raw.toString());
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    String stored = child.child("email").getValue(String.class);
+                    String storedNorm = stored != null
+                            ? stored.trim().toLowerCase() : "";
 
-                            android.util.Log.d("LoginDebug",
-                                    "Found key=" + userSnap.getKey()
-                                    + ", accountCreated=" + accountCreated);
+                    android.util.Log.d("LoginDebug",
+                            "  key=" + child.getKey()
+                            + " stored_email=\"" + stored + "\""
+                            + " normalized=\"" + storedNorm + "\"");
 
-                            if (!accountCreated) {
-                                // First time → Set Password
-                                Intent intent = new Intent(Login.this, SetPassword.class);
-                                intent.putExtra("userType", loginRole);
-                                intent.putExtra("userKey", userSnap.getKey());
-                                intent.putExtra("email", email);
-                                startActivity(intent);
-
-                            } else {
-                                // Forgot password → send reset email
-                                mAuth.sendPasswordResetEmail(email)
-                                        .addOnCompleteListener(task -> {
-                                            if (task.isSuccessful()) {
-                                                Toast.makeText(Login.this,
-                                                        "Password reset email sent.",
-                                                        Toast.LENGTH_LONG).show();
-                                            } else {
-                                                Toast.makeText(Login.this,
-                                                        "Error: " + task.getException().getMessage(),
-                                                        Toast.LENGTH_LONG).show();
-                                            }
-                                        });
-                            }
-
-                            break; // only process first match
-                        }
+                    if (storedNorm.equals(emailNormalized)) {
+                        matchedSnap = child;
+                        break;
                     }
+                }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Toast.makeText(Login.this,
-                                "Database Error: " + error.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+                if (matchedSnap == null) {
+                    android.util.Log.d("LoginDebug",
+                            "No match found for \"" + emailNormalized + "\"");
+                    Toast.makeText(Login.this,
+                            "You are not authorized. Contact Admin.",
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                Object raw = matchedSnap.child("accountCreated").getValue();
+                boolean accountCreated = raw != null
+                        && Boolean.parseBoolean(raw.toString());
+
+                android.util.Log.d("LoginDebug",
+                        "Match found: key=" + matchedSnap.getKey()
+                        + ", accountCreated=" + accountCreated);
+
+                if (!accountCreated) {
+                    // First time → Set Password
+                    Intent intent = new Intent(Login.this, SetPassword.class);
+                    intent.putExtra("userType", loginRole);
+                    intent.putExtra("userKey", matchedSnap.getKey());
+                    intent.putExtra("email", emailNormalized);
+                    startActivity(intent);
+
+                } else {
+                    // Forgot password → send reset email
+                    mAuth.sendPasswordResetEmail(emailNormalized)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(Login.this,
+                                            "Password reset email sent.",
+                                            Toast.LENGTH_LONG).show();
+                                } else {
+                                    Toast.makeText(Login.this,
+                                            "Error: " + task.getException().getMessage(),
+                                            Toast.LENGTH_LONG).show();
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(Login.this,
+                        "Database Error: " + error.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // ─────────────────────────────────────────────────────────────────────────

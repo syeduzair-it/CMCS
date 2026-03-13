@@ -114,6 +114,27 @@
         android:layout_marginTop="12dp"
         android:background="@color/dividerColor" />
 
+    <!-- View Count Row: visible to teachers only, tappable to open viewer list -->
+    <LinearLayout
+        android:id="@+id/llViewRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvViewCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="\uD83D\uDC41 0 views"
+            android:textColor="@color/textSecondary"
+            android:textSize="13sp" />
+    </LinearLayout>
+
     <!-- Action Row: Edit + Delete (owner only) -->
     <LinearLayout
         android:id="@+id/actionRow"

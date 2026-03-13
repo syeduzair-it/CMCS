@@ -78,6 +78,9 @@
             android:name=".AddNoticeActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".NoticeViewersActivity"
+            android:exported="false" />
         <!-- Fees (student read-only) -->
         <activity
             android:name=".FeesActivity"
