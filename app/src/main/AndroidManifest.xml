@@ -12,6 +12,9 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <application
         android:name=".CMCSApplication"
@@ -81,6 +84,10 @@
         <activity
             android:name=".NoticeViewersActivity"
             android:exported="false" />
+        <activity
+            android:name=".NoticeMediaViewerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
         <!-- Fees (student read-only) -->
         <activity
             android:name=".FeesActivity"

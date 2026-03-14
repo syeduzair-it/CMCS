@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.cmcs.AddNoticeActivity;
+import com.example.cmcs.NoticeMediaViewerActivity;
 import com.example.cmcs.NoticeViewersActivity;
 import com.example.cmcs.R;
 import com.example.cmcs.models.NoticeModel;
@@ -224,23 +225,38 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
         if (type.equals("image")) {
             h.ivImagePreview.setVisibility(View.VISIBLE);
             h.nonImagePreview.setVisibility(View.GONE);
-            Glide.with(context).load(n.getMediaUrl()).centerCrop()
+            Glide.with(context).load(n.getMediaUrl()).fitCenter()
                     .placeholder(R.color.surfaceElevated).into(h.ivImagePreview);
+            // Tap → full-screen viewer with download + share
+            h.ivImagePreview.setOnClickListener(v -> {
+                Intent i = new Intent(context, NoticeMediaViewerActivity.class);
+                i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_URL, n.getMediaUrl());
+                i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_TYPE, "image");
+                context.startActivity(i);
+            });
         } else {
             h.ivImagePreview.setVisibility(View.GONE);
             h.nonImagePreview.setVisibility(View.VISIBLE);
             if (type.equals("pdf")) {
                 h.ivMediaIcon.setImageResource(R.drawable.ic_pdf);
                 h.tvMediaLabel.setText("PDF Document — tap to open");
+                // PDF → full-screen viewer with download + share
+                h.nonImagePreview.setOnClickListener(v -> {
+                    Intent i = new Intent(context, NoticeMediaViewerActivity.class);
+                    i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_URL, n.getMediaUrl());
+                    i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_TYPE, "pdf");
+                    context.startActivity(i);
+                });
             } else {
+                // Video → external player directly
                 h.ivMediaIcon.setImageResource(R.drawable.ic_video);
                 h.tvMediaLabel.setText("Video — tap to open");
+                h.nonImagePreview.setOnClickListener(v -> {
+                    Intent i = new Intent(Intent.ACTION_VIEW,
+                            android.net.Uri.parse(n.getMediaUrl()));
+                    context.startActivity(i);
+                });
             }
-            h.nonImagePreview.setOnClickListener(v -> {
-                Intent i = new Intent(Intent.ACTION_VIEW,
-                        android.net.Uri.parse(n.getMediaUrl()));
-                context.startActivity(i);
-            });
         }
     }
 
