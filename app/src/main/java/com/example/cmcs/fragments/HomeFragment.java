@@ -105,10 +105,6 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MaterialToolbar toolbar = view.findViewById(R.id.cmcsToolbar);
-        toolbar.setNavigationOnClickListener(
-                v -> ((MainActivity) requireActivity()).openDrawer());
-
         rvStories = view.findViewById(R.id.rvStories);
         swipeRefresh = view.findViewById(R.id.swipeRefresh);
         rvFeatures = view.findViewById(R.id.rvFeatures);

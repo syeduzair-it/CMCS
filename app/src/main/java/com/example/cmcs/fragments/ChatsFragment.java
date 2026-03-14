@@ -64,10 +64,8 @@ public class ChatsFragment extends Fragment {
 
     // ── Views ─────────────────────────────────────────────────────────────
     private DrawerLayout drawerLayout;
-    private MaterialToolbar toolbar;
     private RecyclerView recyclerView;
     private View emptyStateView;
-    private FloatingActionButton fab;
     private NavigationView navigationView;
 
     // ── Drawer header views (loaded after header inflation) ───────────────
@@ -110,26 +108,19 @@ public class ChatsFragment extends Fragment {
         // 2. Bind views
         bindViews(view);
 
-        // 3. Set up toolbar + drawer toggle
-        setupToolbarAndDrawer();
-
-        // 4. Set up RecyclerView
+        // 3. Set up RecyclerView
         setupRecyclerView();
 
-        // 5. Set up FAB — open SelectUserActivity
-        fab.setOnClickListener(v
-                -> startActivity(new Intent(requireContext(), SelectUserActivity.class)));
-
-        // 6. Set up Navigation Drawer
+        // 4. Set up Navigation Drawer
         setupNavigationDrawer();
 
-        // 7. Init Firebase references with keepSynced
+        // 5. Init Firebase references with keepSynced
         initFirebase();
 
-        // 8. Load nav header (user profile)
+        // 6. Load nav header (user profile)
         loadNavHeader();
 
-        // 9. Load chat list
+        // 7. Load chat list
         loadChatList();
     }
 
@@ -158,10 +149,8 @@ public class ChatsFragment extends Fragment {
     // ─────────────────────────────────────────────────────────────────────
     private void bindViews(View view) {
         drawerLayout = view.findViewById(R.id.drawer_layout);
-        toolbar = view.findViewById(R.id.chat_toolbar);
         recyclerView = view.findViewById(R.id.chat_recycler_view);
         emptyStateView = view.findViewById(R.id.empty_state_view);
-        fab = view.findViewById(R.id.fab_new_chat);
         navigationView = view.findViewById(R.id.navigation_view);
 
         // Nav header child views
@@ -171,15 +160,13 @@ public class ChatsFragment extends Fragment {
         navHeaderRole = headerView.findViewById(R.id.nav_header_role);
     }
 
-    private void setupToolbarAndDrawer() {
-        // Wire the hamburger icon to open/close the drawer
-        toolbar.setNavigationOnClickListener(v -> {
-            if (drawerLayout.isDrawerOpen(navigationView)) {
-                drawerLayout.closeDrawer(navigationView);
-            } else {
-                drawerLayout.openDrawer(navigationView);
-            }
-        });
+    /**
+     * Called by MainActivity when toolbar navigation icon is clicked
+     */
+    public void openDrawer() {
+        if (drawerLayout != null) {
+            drawerLayout.openDrawer(navigationView);
+        }
     }
 
     private void setupRecyclerView() {

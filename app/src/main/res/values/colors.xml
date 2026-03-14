@@ -3,44 +3,65 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Primary Colors (Purple) -->
-    <color name="colorPrimary">#7C4DFF</color>          <!-- Vibrant Purple -->
-    <color name="colorPrimaryVariant">#651FFF</color>   <!-- Deeper Purple -->
-    <color name="colorAccent">#B388FF</color>           <!-- Light Purple accent -->
+    <!-- ── CMCS Purple Academic Palette ──────────────────────────────── -->
+    <!-- Primary: soft lavender purple -->
+    <color name="cmcs_primary">#B69FCB</color>
+    <!-- Primary dark: deeper purple for pressed states / variants -->
+    <color name="cmcs_primary_dark">#64427E</color>
+    <!-- Accent: mid-tone purple for highlights, FABs, badges -->
+    <color name="cmcs_accent">#A08AB8</color>
+    <!-- Background: near-white with a faint purple warmth -->
+    <color name="cmcs_background">#F2EFF7</color>
+    <!-- Card surface: pure white for contrast against background -->
+    <color name="cmcs_card">#FFFFFF</color>
+    <!-- Divider / subtle borders -->
+    <color name="cmcs_divider">#D1D0D6</color>
+    <!-- Secondary text: muted grey-purple -->
+    <color name="cmcs_text_secondary">#80798B</color>
+    <!-- Chat bubble / tint accent -->
+    <color name="cmcs_tint">#B7A0CD</color>
+    <!-- Highlight accent (alias for cmcs_tint) -->
+    <color name="cmcs_highlight">#B7A0CD</color>
 
-    <!-- Background & Surface — LIGHT theme -->
-    <color name="backgroundColor">#FFFFFF</color>       <!-- Pure White -->
-    <color name="surfaceColor">#F5F0FF</color>          <!-- Very light purple tint (cards, nav) -->
-    <color name="surfaceElevated">#EDE7F6</color>       <!-- Slightly deeper for elevation -->
+    <!-- ── Semantic aliases (used throughout all layouts) ────────────── -->
+    <!-- Remapping these to the new palette propagates the theme globally -->
+    <color name="colorPrimary">@color/cmcs_primary</color>
+    <color name="colorPrimaryVariant">@color/cmcs_primary_dark</color>
+    <color name="colorAccent">@color/cmcs_accent</color>
 
-    <!-- Text Colors -->
-    <color name="textPrimary">#1A1A2E</color>           <!-- Dark navy for readability -->
-    <color name="textSecondary">#5C5C7A</color>         <!-- Muted purple-grey -->
+    <color name="backgroundColor">@color/cmcs_background</color>
+    <color name="surfaceColor">@color/cmcs_card</color>
+    <!-- Slightly tinted surface for elevated elements (media bg, chat bubbles) -->
+    <color name="surfaceElevated">#EDE8F4</color>
 
-    <!-- Chat Bubbles -->
-    <color name="chatBubbleMe">#7C4DFF</color>          <!-- Purple bubble (me) -->
-    <color name="chatBubbleOther">#EDE7F6</color>       <!-- Light bubble (others) -->
+    <color name="textPrimary">#2C2C2C</color>
+    <color name="textSecondary">@color/cmcs_text_secondary</color>
 
-    <!-- Bottom Navigation -->
-    <color name="navSelected">#7C4DFF</color>           <!-- Active icon — vibrant purple -->
-    <color name="navUnselected">#BDBDBD</color>         <!-- Inactive icons — light grey -->
+    <!-- Chat bubbles -->
+    <color name="chatBubbleMe">@color/cmcs_primary</color>
+    <color name="chatBubbleOther">#EDE8F4</color>
 
-    <!-- FAB and Highlight -->
-    <color name="fabColor">#7C4DFF</color>
-    <color name="highlightColor">#B388FF</color>
+    <!-- Bottom navigation -->
+    <color name="navSelected">@color/cmcs_primary_dark</color>
+    <color name="navUnselected">#BDBDBD</color>
 
-    <!-- Divider / Borders -->
-    <color name="dividerColor">#E0D7F9</color>          <!-- Soft purple divider -->
+    <!-- FAB and highlights -->
+    <color name="fabColor">@color/cmcs_primary</color>
+    <color name="highlightColor">@color/cmcs_tint</color>
 
-    <color name="lightPurple">#EDE7F6</color>
-    <color name="darkPurple">#651FFF</color>
+    <!-- Divider / borders -->
+    <color name="dividerColor">@color/cmcs_divider</color>
+
+    <!-- Legacy aliases kept for any remaining direct references -->
+    <color name="lightPurple">#EDE8F4</color>
+    <color name="darkPurple">@color/cmcs_primary_dark</color>
     <color name="lightGray">#BDBDBD</color>
 
-    <!-- Message status dot colors -->
-    <color name="statusDelivered">#F44336</color>   <!-- Red  = delivered -->
-    <color name="statusRead">#4CAF50</color>         <!-- Green = read -->
+    <!-- Message status dots -->
+    <color name="statusDelivered">#F44336</color>
+    <color name="statusRead">#4CAF50</color>
 
-    <!-- Error/Destructive Colors -->
+    <!-- Error -->
     <color name="errorColor">#FF5252</color>
 
 </resources>

@@ -11,17 +11,16 @@
     android:id="@+id/cmcsAppBarLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:backgroundTint="@color/white"
-    app:elevation="0dp">
+    android:backgroundTint="@color/cmcs_primary"
+    app:elevation="4dp">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/cmcsToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/white"
+        style="@style/CMCS.Toolbar"
         app:navigationIcon="@drawable/ic_menu"
         app:title="CMCS"
-        app:titleTextColor="@color/textPrimary"
-        app:titleTextAppearance="@style/TextAppearance.Chat.Toolbar" />
+        app:titleTextAppearance="@style/CMCS.Toolbar.TitleText" />
 
 </com.google.android.material.appbar.AppBarLayout>

@@ -71,7 +71,6 @@ public class MeFragment extends Fragment {
 
     // ── Views — Drawer ────────────────────────────────────────────────────
     private DrawerLayout drawerLayout;
-    private MaterialToolbar toolbar;
     private NavigationView navigationView;
 
     // ── Views — Profile card ──────────────────────────────────────────────
@@ -140,18 +139,14 @@ public class MeFragment extends Fragment {
         // 3. Init Firebase references
         initFirebase();
 
-        // 4. Wire toolbar hamburger → DrawerLayout
-        //    (same pattern as ChatsFragment.setupToolbarAndDrawer)
-        setupToolbarAndDrawer();
-
-        // 5. Wire NavigationView item clicks
+        // 4. Wire NavigationView item clicks
         setupNavigationDrawer();
 
-        // 6. Wire edit-image button
+        // 5. Wire edit-image button
         btnEditProfileImage.setOnClickListener(v
                 -> galleryLauncher.launch("image/*"));
 
-        // 7. Load user profile from Firebase
+        // 6. Load user profile from Firebase
         loadUserProfile();
     }
 
@@ -172,7 +167,6 @@ public class MeFragment extends Fragment {
         tvDepartmentOrYear = null;
         rvMenu = null;
         drawerLayout = null;
-        toolbar = null;
         navigationView = null;
     }
 
@@ -181,7 +175,6 @@ public class MeFragment extends Fragment {
     // ─────────────────────────────────────────────────────────────────────
     private void bindViews(View view) {
         drawerLayout = view.findViewById(R.id.me_drawer_layout);
-        toolbar = view.findViewById(R.id.me_toolbar);
         navigationView = view.findViewById(R.id.me_navigation_view);
 
         ivProfileImage = view.findViewById(R.id.ivProfileImage);
@@ -194,26 +187,17 @@ public class MeFragment extends Fragment {
         rvMenu = view.findViewById(R.id.rvMenu);
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Toolbar + Drawer  (mirrors ChatsFragment.setupToolbarAndDrawer exactly)
-    // ─────────────────────────────────────────────────────────────────────
     /**
-     * Wire the hamburger icon to open/close the drawer. Identical pattern to
-     * ChatsFragment.setupToolbarAndDrawer().
+     * Called by MainActivity when toolbar navigation icon is clicked
      */
-    private void setupToolbarAndDrawer() {
-        toolbar.setNavigationOnClickListener(v -> {
-            if (drawerLayout.isDrawerOpen(navigationView)) {
-                drawerLayout.closeDrawer(navigationView);
-            } else {
-                drawerLayout.openDrawer(navigationView);
-            }
-        });
+    public void openDrawer() {
+        if (drawerLayout != null) {
+            drawerLayout.openDrawer(navigationView);
+        }
     }
 
     /**
-     * Handle NavigationView item clicks. Mirrors
-     * ChatsFragment.setupNavigationDrawer().
+     * Handle NavigationView item clicks.
      */
     private void setupNavigationDrawer() {
         navigationView.setNavigationItemSelectedListener(item -> {

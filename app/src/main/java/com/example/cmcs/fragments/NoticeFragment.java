@@ -70,7 +70,10 @@ public class NoticeFragment extends Fragment {
         tabLayout = view.findViewById(R.id.noticeTabLayout);
         fab = view.findViewById(R.id.fabAddNotice);
 
-        // Hide FAB until user role loaded
+        // Hide MainActivity FAB — this fragment has its own
+        hideMainActivityFab();
+
+        // Hide fragment FAB until user role loaded
         fab.hide();
 
         currentUid = FirebaseAuth.getInstance().getCurrentUser() != null
@@ -104,6 +107,22 @@ public class NoticeFragment extends Fragment {
                     public void onCancelled(@NonNull DatabaseError error) {
                     }
                 });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Ensure MainActivity FAB stays hidden when returning to this fragment
+        hideMainActivityFab();
+    }
+
+    /**
+     * Hide MainActivity's Action FAB since NoticeFragment has its own.
+     */
+    private void hideMainActivityFab() {
+        if (getActivity() instanceof com.example.cmcs.MainActivity) {
+            ((com.example.cmcs.MainActivity) getActivity()).hideActionFab();
+        }
     }
 
     // ── Setup ─────────────────────────────────────────────────────────────

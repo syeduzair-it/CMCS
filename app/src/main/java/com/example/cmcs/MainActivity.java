@@ -4,12 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.cmcs.fragments.ChatsFragment;
 import com.example.cmcs.fragments.HomeFragment;
 import com.example.cmcs.fragments.MeFragment;
 import com.example.cmcs.fragments.NoticeFragment;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -23,42 +25,62 @@ import androidx.annotation.NonNull;
 
 public class MainActivity extends AppCompatActivity {
 
-    BottomNavigationView bottomNavView;
-    FloatingActionButton fab;
+    private MaterialToolbar toolbar;
+    private BottomNavigationView bottomNavView;
+    private FloatingActionButton fabScanner;  // Permanent scanner FAB (centered)
+    private FloatingActionButton fabAction;   // Dynamic action FAB (bottom-right)
     private String userRole = "student"; // Default securely to student
+    private Fragment currentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        toolbar = findViewById(R.id.toolbar);
         bottomNavView = findViewById(R.id.bottomNavView);
-        fab = findViewById(R.id.fabScanner);
+        fabScanner = findViewById(R.id.fabScanner);
+        fabAction = findViewById(R.id.fabAction);
+
+        // Set toolbar as action bar
+        setSupportActionBar(toolbar);
+
+        // Wire toolbar navigation icon to open drawer (when applicable)
+        toolbar.setNavigationOnClickListener(v -> {
+            if (currentFragment instanceof ChatsFragment) {
+                ((ChatsFragment) currentFragment).openDrawer();
+            } else if (currentFragment instanceof MeFragment) {
+                ((MeFragment) currentFragment).openDrawer();
+            }
+        });
 
         // Default fragment
-        loadFragment(new HomeFragment());
+        loadFragment(new HomeFragment(), "Home");
 
         // Mark Home as selected by default
         bottomNavView.setSelectedItemId(R.id.nav_home);
 
         bottomNavView.setOnItemSelectedListener(item -> {
-
             int id = item.getItemId();
-
             Fragment selectedFragment = null;
+            String title = "CMCS";
 
             if (id == R.id.nav_home) {
                 selectedFragment = new HomeFragment();
+                title = "Home";
             } else if (id == R.id.nav_chats) {
                 selectedFragment = new ChatsFragment();
+                title = "Chats";
             } else if (id == R.id.nav_notice) {
                 selectedFragment = new NoticeFragment();
+                title = "Notices";
             } else if (id == R.id.nav_me) {
                 selectedFragment = new MeFragment();
+                title = "Profile";
             }
 
             if (selectedFragment != null) {
-                loadFragment(selectedFragment);
+                loadFragment(selectedFragment, title);
                 return true;
             }
 
@@ -67,15 +89,14 @@ public class MainActivity extends AppCompatActivity {
 
         fetchUserRole();
 
-        fab.setOnClickListener(v -> {
-            Intent intent;
-            if ("teacher".equalsIgnoreCase(userRole)) {
-                intent = new Intent(MainActivity.this, ClassSelectionActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, ScannerActivity.class);
-            }
+        // Scanner FAB always opens ScannerActivity (permanent, never changes)
+        fabScanner.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ScannerActivity.class);
             startActivity(intent);
         });
+
+        // Action FAB initially hidden — configured per fragment in loadFragment()
+        fabAction.hide();
     }
 
     private void fetchUserRole() {
@@ -97,11 +118,88 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void loadFragment(Fragment fragment) {
+    private void loadFragment(Fragment fragment, String title) {
+        currentFragment = fragment;
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
+        
+        // Update toolbar title
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(title);
+        }
+        
+        // Show/hide navigation icon based on fragment
+        if (fragment instanceof ChatsFragment || fragment instanceof MeFragment) {
+            toolbar.setNavigationIcon(R.drawable.ic_menu);
+        } else {
+            toolbar.setNavigationIcon(null);
+        }
+        
+        // Configure Action FAB visibility and behavior per fragment
+        // Scanner FAB remains permanently visible
+        configureActionFabForFragment(fragment);
+    }
+    
+    /**
+     * Configure Action FAB visibility and click behavior based on active fragment.
+     * Scanner FAB remains permanently visible and is never modified.
+     * 
+     * Rules:
+     * - HomeFragment: Hide Action FAB
+     * - ChatsFragment: Show Action FAB (opens SelectUserActivity)
+     * - NoticeFragment: Hide Action FAB (NoticeFragment has its own FAB)
+     * - MeFragment: Hide Action FAB
+     */
+    private void configureActionFabForFragment(Fragment fragment) {
+        if (fragment instanceof ChatsFragment) {
+            // Show Action FAB for new chat
+            fabAction.show();
+            fabAction.setImageResource(R.drawable.ic_new_chat);
+            fabAction.setContentDescription("New Chat");
+            fabAction.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, SelectUserActivity.class);
+                startActivity(intent);
+            });
+        } else if (fragment instanceof NoticeFragment) {
+            // Hide Action FAB — NoticeFragment has its own
+            fabAction.hide();
+        } else {
+            // Hide Action FAB for Home and Me fragments
+            fabAction.hide();
+        }
+    }
+    
+    /**
+     * Public method to allow fragments to control Action FAB visibility.
+     * Used by NoticeFragment to hide MainActivity Action FAB when it shows its own.
+     */
+    public void hideActionFab() {
+        if (fabAction != null) {
+            fabAction.hide();
+        }
+    }
+    
+    /**
+     * Public method to show Action FAB with custom configuration.
+     * Used by fragments that need dynamic Action FAB control.
+     */
+    public void showActionFab(int iconRes, String description, View.OnClickListener listener) {
+        if (fabAction != null) {
+            fabAction.setImageResource(iconRes);
+            fabAction.setContentDescription(description);
+            fabAction.setOnClickListener(listener);
+            fabAction.show();
+        }
+    }
+    
+    /**
+     * Public method to get user role.
+     * Used by fragments that need role-based UI logic.
+     */
+    public String getUserRole() {
+        return userRole;
     }
 
     /**
@@ -119,7 +217,11 @@ public class MainActivity extends AppCompatActivity {
      * global NavigationDrawer.
      */
     public void openDrawer() {
-        // No-op for Phase 1 — MeFragment has no dedicated drawer.
-        // Will be wired to a global NavigationDrawer in a future phase.
+        // Delegate to current fragment if it supports drawer
+        if (currentFragment instanceof ChatsFragment) {
+            ((ChatsFragment) currentFragment).openDrawer();
+        } else if (currentFragment instanceof MeFragment) {
+            ((MeFragment) currentFragment).openDrawer();
+        }
     }
 }

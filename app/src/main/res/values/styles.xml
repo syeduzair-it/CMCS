@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- OTP input box -->
     <style name="OtpBox">
         <item name="android:layout_width">38dp</item>
         <item name="android:layout_height">38dp</item>
@@ -11,16 +12,74 @@
         <item name="android:textColor">@color/black</item>
         <item name="android:textSize">18sp</item>
         <item name="android:layout_marginEnd">8dp</item>
-
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <!-- Tab text style for NoticeFragment TabLayout -->
-    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
+    <style name="TabTextAppearance" parent="TextAppearance.AppCompat.Small">
         <item name="android:textSize">13sp</item>
         <item name="android:textStyle">bold</item>
         <item name="textAllCaps">true</item>
+    </style>
+
+    <!--
+        Root CMCS style — required by aapt2 because Android treats dots in
+        style names as parent-child relationships. CMCS.Toolbar implies a
+        parent named CMCS must exist. We declare it here as a no-op root.
+    -->
+    <style name="CMCS" parent="Widget.MaterialComponents.Toolbar" />
+
+    <!-- ── Global Toolbar ────────────────────────────────────────────── -->
+    <!-- Apply with: style="@style/CMCS.Toolbar" on MaterialToolbar -->
+    <style name="CMCS.Toolbar">
+        <item name="android:background">@color/cmcs_primary</item>
+        <item name="titleTextColor">@android:color/white</item>
+        <item name="subtitleTextColor">@android:color/white</item>
+        <item name="navigationIconTint">@android:color/white</item>
+    </style>
+
+    <!-- Toolbar title text appearance -->
+    <style name="CMCS.Toolbar.TitleText" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- ── Global Card ───────────────────────────────────────────────── -->
+    <!-- Apply with: style="@style/CMCS.Card" on MaterialCardView -->
+    <style name="CMCS.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/cmcs_card</item>
+        <item name="strokeColor">@color/cmcs_divider</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">@dimen/_16sdp</item>
+        <item name="cardElevation">2dp</item>
+    </style>
+
+    <!-- ── Primary Button ────────────────────────────────────────────── -->
+    <!-- Apply with: style="@style/CMCS.Button" on MaterialButton -->
+    <style name="CMCS.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/cmcs_primary</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="rippleColor">@color/cmcs_primary_dark</item>
+    </style>
+
+    <!-- ── Outlined Button ───────────────────────────────────────────── -->
+    <style name="CMCS.Button.Outlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/cmcs_primary</item>
+        <item name="android:textColor">@color/cmcs_primary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="rippleColor">@color/cmcs_background</item>
+    </style>
+
+    <!-- ── Section Header Text ───────────────────────────────────────── -->
+    <style name="CMCS.SectionHeader">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
     </style>
 
 </resources>
