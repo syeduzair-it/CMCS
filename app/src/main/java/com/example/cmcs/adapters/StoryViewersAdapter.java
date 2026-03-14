@@ -1,7 +1,6 @@
 package com.example.cmcs.adapters;
 
 import android.content.Context;
-import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,14 +42,6 @@ public class StoryViewersAdapter extends RecyclerView.Adapter<StoryViewersAdapte
                 .placeholder(R.drawable.ic_user)
                 .circleCrop()
                 .into(holder.ivImage);
-
-        if (model.getTimestamp() > 0) {
-            CharSequence relativeTime = DateUtils.getRelativeTimeSpanString(
-                    model.getTimestamp(), System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS);
-            holder.tvTime.setText(relativeTime);
-        } else {
-            holder.tvTime.setText("Just now");
-        }
     }
 
     @Override
@@ -60,13 +51,12 @@ public class StoryViewersAdapter extends RecyclerView.Adapter<StoryViewersAdapte
 
     static class VH extends RecyclerView.ViewHolder {
 
-        TextView tvName, tvTime;
+        TextView tvName;
         android.widget.ImageView ivImage;
 
         VH(@NonNull View v) {
             super(v);
-            tvName = v.findViewById(R.id.tvViewerName);
-            tvTime = v.findViewById(R.id.tvViewerTime);
+            tvName  = v.findViewById(R.id.tvViewerName);
             ivImage = v.findViewById(R.id.ivViewerImage);
         }
     }

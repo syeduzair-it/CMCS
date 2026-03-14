@@ -90,39 +90,33 @@ public class NoticeViewersActivity extends AppCompatActivity {
 
     // ── Step 1: read all viewer UIDs ──────────────────────────────────────
     private void loadViewers(String noticeId) {
-        android.util.Log.d("NoticeViewers", "loadViewers: noticeId=" + noticeId);
 
         FirebaseDatabase.getInstance()
                 .getReference("noticeViews")
                 .child(noticeId)
+                .child("viewers")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
+
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        long count = snapshot.getChildrenCount();
-                        android.util.Log.d("NoticeViewers",
-                                "noticeViews children count=" + count);
 
-                        if (!snapshot.exists() || count == 0) {
+                        if (!snapshot.exists()) {
                             showEmptyState();
                             return;
                         }
 
-                        // Set the counter BEFORE firing any async lookups so
-                        // onLookupComplete can never see 0 before all are fired.
-                        pendingLookups.set((int) count);
+                        pendingLookups.set((int) snapshot.getChildrenCount());
 
                         for (DataSnapshot child : snapshot.getChildren()) {
-                            String authUid = child.getKey(); // key = student authUid
-                            android.util.Log.d("NoticeViewers",
-                                    "Queuing lookup for authUid=" + authUid);
+
+                            String authUid = child.getKey();
                             fetchStudentByAuthUid(authUid);
+
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        android.util.Log.e("NoticeViewers",
-                                "loadViewers cancelled: " + error.getMessage());
                         showEmptyState();
                     }
                 });
