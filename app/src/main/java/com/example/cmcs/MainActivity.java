@@ -89,9 +89,16 @@ public class MainActivity extends AppCompatActivity {
 
         fetchUserRole();
 
-        // Scanner FAB always opens ScannerActivity (permanent, never changes)
+        // Scanner FAB click behavior — role-based routing
         fabScanner.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, ScannerActivity.class);
+            Intent intent;
+            if ("teacher".equalsIgnoreCase(userRole)) {
+                // Teachers: Open class selection for attendance management
+                intent = new Intent(MainActivity.this, ClassSelectionActivity.class);
+            } else {
+                // Students: Open QR scanner to mark attendance
+                intent = new Intent(MainActivity.this, ScannerActivity.class);
+            }
             startActivity(intent);
         });
 
