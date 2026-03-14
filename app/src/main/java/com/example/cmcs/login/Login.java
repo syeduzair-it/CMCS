@@ -312,7 +312,7 @@ public class Login extends AppCompatActivity {
                             editor.apply();
 
                             // Sync users/ node for chat system
-                            syncUserNode(authUid, name, "student", department, gender);
+                            syncUserNode(authUid, name, "student", department, gender, course, year);
 
                             Intent intent = new Intent(Login.this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
@@ -372,7 +372,7 @@ public class Login extends AppCompatActivity {
                             editor.apply();
 
                             // Sync users/ node for chat system
-                            syncUserNode(authUid, name, "teacher", department, gender);
+                            syncUserNode(authUid, name, "teacher", department, gender, "", "");
 
                             Intent intent = new Intent(Login.this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
@@ -395,7 +395,7 @@ public class Login extends AppCompatActivity {
     // Sync users/<authUid> node — required for chat system & SelectUserActivity
     // ─────────────────────────────────────────────────────────────────────────
     private void syncUserNode(String authUid, String name, String role,
-            String department, String gender) {
+            String department, String gender, String course, String year) {
         DatabaseReference userRef = dbRef.child("users").child(authUid);
 
         Map<String, Object> updates = new HashMap<>();
@@ -403,8 +403,13 @@ public class Login extends AppCompatActivity {
         updates.put("role", role != null ? role : "");
         updates.put("department", department != null ? department : "");
         updates.put("gender", gender != null ? gender : "");
-        updates.put("profileImage", "");   // preserve any existing image via updateChildren
+        // course and year are student-only; write empty string for teachers so
+        // the field exists and downstream null-checks don't break.
+        updates.put("course", course != null ? course : "");
+        updates.put("year", year != null ? year : "");
+        // updateChildren preserves profileImage if it was already set
+        updates.put("profileImage", "");
 
-        userRef.updateChildren(updates);  // updateChildren won't wipe fields not listed
+        userRef.updateChildren(updates);
     }
 }

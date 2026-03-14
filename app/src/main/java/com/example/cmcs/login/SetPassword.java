@@ -126,7 +126,7 @@ public class SetPassword extends AppCompatActivity {
                 String gender = snapshot.child("gender").getValue(String.class);
 
                 // Create users/ node
-                syncUserNode(authUid, name, "student", department, gender);
+                syncUserNode(authUid, name, "student", department, gender, course, year);
 
                 // Save SharedPreferences
                 SharedPreferences prefs
@@ -179,7 +179,7 @@ public class SetPassword extends AppCompatActivity {
                 String emailVal = snapshot.child("email").getValue(String.class);
 
                 // Create users/ node with teacher role
-                syncUserNode(authUid, name, "teacher", department, gender);
+                syncUserNode(authUid, name, "teacher", department, gender, "", "");
 
                 // Save SharedPreferences
                 SharedPreferences prefs
@@ -215,7 +215,7 @@ public class SetPassword extends AppCompatActivity {
     // Sync users/<authUid> node — required for chat system & SelectUserActivity
     // ─────────────────────────────────────────────────────────────────────────
     private void syncUserNode(String authUid, String name, String role,
-            String department, String gender) {
+            String department, String gender, String course, String year) {
         DatabaseReference userRef = dbRef.child("users").child(authUid);
 
         Map<String, Object> updates = new HashMap<>();
@@ -223,6 +223,8 @@ public class SetPassword extends AppCompatActivity {
         updates.put("role", role != null ? role : "");
         updates.put("department", department != null ? department : "");
         updates.put("gender", gender != null ? gender : "");
+        updates.put("course", course != null ? course : "");
+        updates.put("year", year != null ? year : "");
         updates.put("profileImage", "");
 
         userRef.updateChildren(updates);

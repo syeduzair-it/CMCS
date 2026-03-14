@@ -115,8 +115,11 @@ public class NoticeListFragment extends Fragment {
     // ── Firebase ──────────────────────────────────────────────────────────
     private void loadNotices() {
         if (dbPath == null || dbPath.isEmpty()) {
+            android.util.Log.e("NoticeListFragment", "loadNotices: dbPath is null or empty");
             return;
         }
+
+        android.util.Log.d("NoticeListFragment", "Loading notices from path: " + dbPath);
 
         // Order by timestamp server-side; we'll reverse in memory for DESC display
         firebaseQuery = FirebaseDatabase.getInstance()
@@ -134,9 +137,27 @@ public class NoticeListFragment extends Fragment {
                 for (DataSnapshot child : snapshot.getChildren()) {
                     NoticeModel n = child.getValue(NoticeModel.class);
                     if (n != null) {
-                        if (n.getNoticeId() == null) {
-                            n.setNoticeId(child.getKey());
+                        // ── CRITICAL FIX ───────────────────────────────────────
+                        // ALWAYS set noticeId from the Firebase key, even if it's already set
+                        // This ensures we never use incorrect values like course names
+                        String firebaseKey = child.getKey();
+                        if (firebaseKey != null && !firebaseKey.isEmpty()) {
+                            n.setNoticeId(firebaseKey);
+                            android.util.Log.d("NoticeListFragment", 
+                                "Loaded notice with ID: " + firebaseKey + 
+                                ", Title: " + n.getTitle());
+                        } else {
+                            android.util.Log.e("NoticeListFragment", 
+                                "Notice has null Firebase key, skipping");
+                            continue; // Skip this notice if key is invalid
                         }
+                        
+                        // Validate that the noticeId is a proper Firebase push key
+                        if (!firebaseKey.startsWith("-") || firebaseKey.length() < 15) {
+                            android.util.Log.w("NoticeListFragment", 
+                                "Notice has unusual key format: " + firebaseKey);
+                        }
+                        
                         fresh.add(n);
                     }
                 }
@@ -151,6 +172,9 @@ public class NoticeListFragment extends Fragment {
                 noticeList.addAll(fresh);
                 adapter.notifyDataSetChanged();
 
+                android.util.Log.d("NoticeListFragment", 
+                    "Loaded " + noticeList.size() + " notices from " + dbPath);
+
                 emptyState.setVisibility(noticeList.isEmpty() ? View.VISIBLE : View.GONE);
                 recyclerView.setVisibility(noticeList.isEmpty() ? View.GONE : View.VISIBLE);
             }
@@ -160,6 +184,9 @@ public class NoticeListFragment extends Fragment {
                 if (isAdded()) {
                     progressBar.setVisibility(View.GONE);
                     emptyState.setVisibility(View.VISIBLE);
+                    android.util.Log.e("NoticeListFragment", 
+                        "Failed to load notices from " + dbPath + 
+                        ", Error: " + error.getMessage());
                 }
             }
         };

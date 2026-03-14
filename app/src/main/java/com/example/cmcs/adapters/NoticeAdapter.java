@@ -102,8 +102,17 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
             h.llViewRow.setVisibility(View.GONE);
             h.llViewRow.setOnClickListener(null);
 
-            // Record view on card tap (once per student — Firebase ignores duplicate writes
-            // because the student UID key already exists with the same value `true`)
+            // ── DUPLICATE-WRITE FIX ────────────────────────────────────────
+            // Do NOT call recordStudentView() here in onBindViewHolder.
+            // onBindViewHolder is called every time the RecyclerView recycles
+            // this ViewHolder (scroll, data refresh, tab switch) — that would
+            // fire a write on every rebind, not just on an explicit user tap.
+            //
+            // Instead we record the view exactly once: when the student taps
+            // the card. Firebase setValue(true) on an already-existing key is
+            // a no-op on the server, so even if the user taps twice the DB
+            // entry is written only once.
+            h.itemView.setOnClickListener(null); // clear any stale listener first
             h.itemView.setOnClickListener(v -> recordStudentView(n.getNoticeId()));
         }
     }
@@ -120,10 +129,21 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
      * for every visible notice card (important for ~1500 active users).
      */
     private void loadViewCount(@NonNull NoticeViewHolder h, String noticeId) {
+        // ── VALIDATION ─────────────────────────────────────────────────────
         if (noticeId == null || noticeId.isEmpty()) {
+            h.tvViewCount.setText("\uD83D\uDC41 0 views");
+            return;
+        }
+        
+        // Validate noticeId format to prevent querying invalid paths
+        if (!noticeId.startsWith("-") || noticeId.length() < 15) {
+            android.util.Log.e("NoticeAdapter", 
+                "loadViewCount: Invalid noticeId format: " + noticeId);
+            h.tvViewCount.setText("\uD83D\uDC41 0 views");
             return;
         }
 
+        // ── FETCH VIEW COUNT ───────────────────────────────────────────────
         FirebaseDatabase.getInstance()
                 .getReference("noticeViews")
                 .child(noticeId)
@@ -132,11 +152,18 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         long count = snapshot.getChildrenCount();
                         h.tvViewCount.setText("\uD83D\uDC41 " + count + (count == 1 ? " view" : " views"));
+                        
+                        android.util.Log.d("NoticeAdapter", 
+                            "Loaded view count for notice " + noticeId + ": " + count + " views");
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         // Keep showing 0; no crash
+                        h.tvViewCount.setText("\uD83D\uDC41 0 views");
+                        android.util.Log.e("NoticeAdapter", 
+                            "Failed to load view count for notice: " + noticeId + 
+                            ", Error: " + error.getMessage());
                     }
                 });
     }
@@ -147,21 +174,51 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
      * existing key is a no-op in RTDB. Teacher views are never recorded.
      */
     private void recordStudentView(String noticeId) {
+        // ── CRITICAL VALIDATION ────────────────────────────────────────────
+        // Ensure noticeId is a valid Firebase push key (starts with '-' and is ~20 chars)
+        // This prevents writing to incorrect paths like noticeViews/bca/uid
         if (noticeId == null || noticeId.isEmpty()) {
+            android.util.Log.e("NoticeAdapter", "recordStudentView: noticeId is null or empty");
             return;
         }
+        
+        // Firebase push keys start with '-' and are typically 20 characters
+        // This validation prevents course names or other invalid values from being used
+        if (!noticeId.startsWith("-") || noticeId.length() < 15) {
+            android.util.Log.e("NoticeAdapter", 
+                "recordStudentView: Invalid noticeId format: " + noticeId + 
+                " (must be Firebase push key starting with '-')");
+            return;
+        }
+        
         if (currentUid == null || currentUid.isEmpty()) {
+            android.util.Log.e("NoticeAdapter", "recordStudentView: currentUid is null or empty");
             return;
         }
+        
         if (!"student".equalsIgnoreCase(currentRole)) {
+            // Teachers don't record views - this is expected behavior
             return;
         }
 
+        // ── WRITE TO FIREBASE ──────────────────────────────────────────────
+        android.util.Log.d("NoticeAdapter", 
+            "Recording view: noticeViews/" + noticeId + "/" + currentUid);
+            
         FirebaseDatabase.getInstance()
                 .getReference("noticeViews")
                 .child(noticeId)
                 .child(currentUid)
-                .setValue(true);
+                .setValue(true)
+                .addOnSuccessListener(v -> {
+                    android.util.Log.d("NoticeAdapter", 
+                        "Successfully recorded view for notice: " + noticeId);
+                })
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("NoticeAdapter", 
+                        "Failed to record view for notice: " + noticeId + 
+                        ", Error: " + e.getMessage());
+                });
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────
