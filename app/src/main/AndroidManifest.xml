@@ -72,6 +72,7 @@
         <activity
             android:name=".ChatActivity"
             android:exported="false"
+            android:theme="@style/Theme.CMCS.Chat"
             android:windowSoftInputMode="adjustResize|stateHidden" />
         <activity
             android:name=".ForwardMessageActivity"

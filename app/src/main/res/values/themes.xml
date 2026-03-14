@@ -38,6 +38,12 @@
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
+    <!-- Chat theme — seamless status bar integration -->
+    <style name="Theme.CMCS.Chat" parent="Theme.CMCS">
+        <item name="android:statusBarColor">@color/cmcs_primary</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
     <!-- Chat toolbar title text appearance -->
     <style name="TextAppearance.Chat.Toolbar" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="android:textSize">20sp</item>

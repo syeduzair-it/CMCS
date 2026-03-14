@@ -90,6 +90,52 @@ public class ChatActivity extends AppCompatActivity {
     private boolean isForwarding = false;
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Immersive Edge-to-Edge Setup
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Configures modern immersive edge-to-edge layout for chat screen.
+     * Makes status bar transparent and extends toolbar into status bar area.
+     */
+    private void setupImmersiveEdgeToEdge() {
+        // Enable edge-to-edge mode
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        
+        // Make status bar transparent
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
+        // Set light status bar icons (white icons on purple background)
+        androidx.core.view.WindowInsetsControllerCompat controller = 
+            androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (controller != null) {
+            controller.setAppearanceLightStatusBars(false);
+        }
+        
+        // Apply insets to toolbar so it extends into status bar area
+        View rootView = findViewById(android.R.id.content);
+        if (rootView != null) {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+                androidx.core.graphics.Insets systemBars = 
+                    insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                
+                // Find toolbar and add top padding equal to status bar height + base padding
+                View toolbar = findViewById(R.id.chatHeader);
+                if (toolbar != null) {
+                    // Base padding of 8dp converted to pixels
+                    int basePaddingPx = (int) (8 * getResources().getDisplayMetrics().density);
+                    toolbar.setPadding(
+                        toolbar.getPaddingLeft(),
+                        systemBars.top + basePaddingPx,
+                        toolbar.getPaddingRight(),
+                        toolbar.getPaddingBottom()
+                    );
+                }
+                
+                return insets;
+            });
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Lifecycle
     // ─────────────────────────────────────────────────────────────────────────
     @Override
@@ -97,8 +143,8 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_r);
 
-        // Apply edge-to-edge with light status bar (dark icons for white background)
-        WindowInsetsHelper.setupEdgeToEdge(this, true);
+        // Apply modern immersive edge-to-edge layout
+        setupImmersiveEdgeToEdge();
 
         // 1. Auth check
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
