@@ -21,6 +21,7 @@ import androidx.cardview.widget.CardView;
 import com.example.cmcs.db.MarksheetDao;
 import com.example.cmcs.db.MarksheetDatabase;
 import com.example.cmcs.db.MarksheetEntity;
+import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -95,6 +96,9 @@ public class MarksheetActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_marksheet);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         loadingSpinner = findViewById(R.id.marksheet_loading);
         containerSemesters = findViewById(R.id.container_semesters);

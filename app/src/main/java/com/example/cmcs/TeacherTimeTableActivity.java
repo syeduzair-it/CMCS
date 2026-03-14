@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.chrisbanes.photoview.PhotoView;
+import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 
@@ -68,6 +69,9 @@ public class TeacherTimeTableActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_teacher_timetable);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         timetableFile = new File(getFilesDir(), "timetable/timetable.jpg");
 

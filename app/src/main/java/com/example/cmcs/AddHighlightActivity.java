@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide;
 import com.example.cmcs.models.HighlightMediaModel;
 import com.example.cmcs.models.HighlightModel;
 import com.example.cmcs.utils.CloudinaryUploader;
+import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -64,6 +65,9 @@ public class AddHighlightActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_highlight);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         ivPreview = findViewById(R.id.ah_ivPreview);
         loading = findViewById(R.id.ah_loading);

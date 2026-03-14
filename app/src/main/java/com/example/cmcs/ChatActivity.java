@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.cmcs.adapters.MessageAdapter;
 import com.example.cmcs.models.MessageModel;
+import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -95,6 +96,9 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_r);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         // 1. Auth check
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();

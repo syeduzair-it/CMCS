@@ -57,7 +57,7 @@
             android:layout_height="40dp"
             android:background="@android:color/transparent"
             android:contentDescription="Back"
-            android:src="@drawable/ic_back_arrow"
+            android:src="@drawable/ic_arrow_back"
             android:tint="@color/white" />
 
         <TextView

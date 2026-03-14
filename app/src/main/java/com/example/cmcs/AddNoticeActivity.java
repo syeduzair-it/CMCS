@@ -21,6 +21,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.bumptech.glide.Glide;
 import com.example.cmcs.models.NoticeModel;
 import com.example.cmcs.utils.CloudinaryUploader;
+import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.FirebaseDatabase;
@@ -112,6 +113,9 @@ public class AddNoticeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_notice);
+
+        // Apply edge-to-edge with dark status bar (light icons for purple background)
+        WindowInsetsHelper.setupEdgeToEdge(this, false);
 
         bindViews();
         readIntent();

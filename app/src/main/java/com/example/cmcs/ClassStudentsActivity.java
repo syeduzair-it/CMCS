@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cmcs.adapters.UserSelectionAdapter;
 import com.example.cmcs.models.UserModel;
+import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.DataSnapshot;
@@ -50,6 +51,9 @@ public class ClassStudentsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_class_students);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         // Retrieve intent extras
         targetDepartment = getIntent().getStringExtra("department");

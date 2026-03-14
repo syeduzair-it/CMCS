@@ -33,7 +33,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/white"
-            app:navigationIcon="@drawable/ic_back_arrow"
+            app:navigationIcon="@drawable/ic_arrow_back"
             app:title="Fees"
             app:titleTextColor="@color/textPrimary"
             app:titleTextAppearance="@style/TextAppearance.Chat.Toolbar" />

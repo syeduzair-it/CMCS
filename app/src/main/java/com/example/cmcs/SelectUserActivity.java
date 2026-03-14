@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cmcs.adapters.ClassSelectionAdapter;
 import com.example.cmcs.adapters.UserSelectionAdapter;
 import com.example.cmcs.models.UserModel;
+import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -93,6 +94,9 @@ public class SelectUserActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_user);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         // 1. Auth check — FirebaseAuth is the single source of truth
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();

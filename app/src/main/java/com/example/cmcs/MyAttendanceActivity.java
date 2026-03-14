@@ -38,6 +38,7 @@ import com.prolificinteractive.materialcalendarview.DayViewFacade;
 import androidx.core.content.ContextCompat;
 import android.graphics.drawable.Drawable;
 import android.text.style.ForegroundColorSpan;
+import com.example.cmcs.utils.WindowInsetsHelper;
 
 public class MyAttendanceActivity extends AppCompatActivity {
 
@@ -66,6 +67,9 @@ public class MyAttendanceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_attendance);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         toolbar = findViewById(R.id.toolbarMyAttendance);
         progressBar = findViewById(R.id.progressBarMyAttendance);

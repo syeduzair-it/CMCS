@@ -48,6 +48,7 @@ import java.util.Stack;
 
 import com.example.cmcs.adapters.StudentSwipeAdapter;
 import com.example.cmcs.models.StudentModel;
+import com.example.cmcs.utils.WindowInsetsHelper;
 
 public class AttendanceSessionActivity extends AppCompatActivity {
 
@@ -104,6 +105,9 @@ public class AttendanceSessionActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_attendance_session);
+
+        // Apply edge-to-edge with light status bar (dark icons for white background)
+        WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         toolbar = findViewById(R.id.toolbarAttendanceSession);
         tvDate = findViewById(R.id.tvDate);
