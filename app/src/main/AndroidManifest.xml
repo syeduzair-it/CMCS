@@ -88,6 +88,11 @@
             android:name=".NoticeMediaViewerActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize" />
+        <activity
+            android:name=".NoticeVideoViewerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="sensor" />
         <!-- Fees (student read-only) -->
         <activity
             android:name=".FeesActivity"

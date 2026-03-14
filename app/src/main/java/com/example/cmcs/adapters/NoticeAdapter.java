@@ -15,8 +15,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.cmcs.AddNoticeActivity;
 import com.example.cmcs.NoticeMediaViewerActivity;
+import com.example.cmcs.NoticeVideoViewerActivity;
 import com.example.cmcs.NoticeViewersActivity;
 import com.example.cmcs.R;
 import com.example.cmcs.models.NoticeModel;
@@ -225,8 +227,11 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
         if (type.equals("image")) {
             h.ivImagePreview.setVisibility(View.VISIBLE);
             h.nonImagePreview.setVisibility(View.GONE);
-            Glide.with(context).load(n.getMediaUrl()).fitCenter()
-                    .placeholder(R.color.surfaceElevated).into(h.ivImagePreview);
+            Glide.with(context).load(n.getMediaUrl())
+                    .fitCenter()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .placeholder(R.color.surfaceElevated)
+                    .into(h.ivImagePreview);
             // Tap → full-screen viewer with download + share
             h.ivImagePreview.setOnClickListener(v -> {
                 Intent i = new Intent(context, NoticeMediaViewerActivity.class);
@@ -248,12 +253,12 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
                     context.startActivity(i);
                 });
             } else {
-                // Video → external player directly
+                // Video → in-app ExoPlayer
                 h.ivMediaIcon.setImageResource(R.drawable.ic_video);
-                h.tvMediaLabel.setText("Video — tap to open");
+                h.tvMediaLabel.setText("Video — tap to play");
                 h.nonImagePreview.setOnClickListener(v -> {
-                    Intent i = new Intent(Intent.ACTION_VIEW,
-                            android.net.Uri.parse(n.getMediaUrl()));
+                    Intent i = new Intent(context, NoticeVideoViewerActivity.class);
+                    i.putExtra(NoticeVideoViewerActivity.EXTRA_VIDEO_URL, n.getMediaUrl());
                     context.startActivity(i);
                 });
             }

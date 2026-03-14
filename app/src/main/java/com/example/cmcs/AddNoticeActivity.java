@@ -3,7 +3,6 @@ package com.example.cmcs;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -229,15 +228,23 @@ public class AddNoticeActivity extends AppCompatActivity {
     // ── Save Logic ────────────────────────────────────────────────────────
     private void saveNotice() {
         String title = Objects.requireNonNull(etTitle.getText()).toString().trim();
-        String desc = Objects.requireNonNull(etDescription.getText()).toString().trim();
+        String desc  = Objects.requireNonNull(etDescription.getText()).toString().trim();
 
-        if (TextUtils.isEmpty(title)) {
-            etTitle.setError("Title is required");
+        // A notice is valid if it has any content — text OR media.
+        if (title.isEmpty() && desc.isEmpty() && pickedMediaUri == null) {
+            Toast.makeText(this, "Add text or attach a file", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (TextUtils.isEmpty(desc)) {
-            etDescription.setError("Description is required");
-            return;
+
+        // 50 MB video size guard
+        if ("video".equals(pickedMimeType) && pickedMediaUri != null) {
+            long sizeBytes = getFileSizeBytes(pickedMediaUri);
+            if (sizeBytes > 50 * 1024 * 1024L) {
+                Toast.makeText(this,
+                        "Video exceeds 50 MB limit. Please trim or compress it first.",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
         }
 
         setBusy(true);
@@ -252,6 +259,19 @@ public class AddNoticeActivity extends AppCompatActivity {
                 writeNotice(title, desc, "text", null);
             }
         }
+    }
+
+    /** Returns file size in bytes, or 0 if it cannot be determined. */
+    private long getFileSizeBytes(Uri uri) {
+        try (android.database.Cursor cursor = getContentResolver().query(
+                uri, new String[]{android.provider.OpenableColumns.SIZE},
+                null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int idx = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE);
+                if (idx >= 0 && !cursor.isNull(idx)) return cursor.getLong(idx);
+            }
+        } catch (Exception ignored) {}
+        return 0L;
     }
 
     private void saveEdit(String title, String desc) {
