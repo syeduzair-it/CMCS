@@ -75,6 +75,11 @@
             android:theme="@style/Theme.CMCS.Chat"
             android:windowSoftInputMode="adjustResize|stateHidden" />
         <activity
+            android:name=".ImageViewerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CMCS.Fullscreen"
+            android:configChanges="orientation|screenSize" />
+        <activity
             android:name=".ForwardMessageActivity"
             android:exported="false" />
         <!-- Notice System -->

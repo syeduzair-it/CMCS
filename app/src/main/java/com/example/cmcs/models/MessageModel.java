@@ -10,9 +10,15 @@ import java.util.Map;
  * Maps to the Firebase node: messages/<chatId>/<messageId>
  *
  * {
- * senderId: "uid" message: "text" timestamp: 1234567890 deliveredTo: { uid:
- * true } // populated when receiver loads chat readBy: { uid: true } //
- * populated when receiver opens chat }
+ * senderId: "uid" 
+ * messageType: "text" | "image" | "video" | "file"
+ * message: "text" (for text messages)
+ * mediaUrl: "cloudinary url" (for media messages)
+ * fileName: "document.pdf" (for file messages)
+ * timestamp: 1234567890 
+ * deliveredTo: { uid: true } 
+ * readBy: { uid: true }
+ * }
  *
  * Message status is derived from deliveredTo / readBy maps: WHITE = not yet in
  * deliveredTo for other user RED = in deliveredTo but not readBy GREEN = in
@@ -23,9 +29,18 @@ import java.util.Map;
 @IgnoreExtraProperties
 public class MessageModel {
 
+    // ── Message type constants ─────────────────────────────────────────────
+    public static final String TYPE_TEXT = "text";
+    public static final String TYPE_IMAGE = "image";
+    public static final String TYPE_VIDEO = "video";
+    public static final String TYPE_FILE = "file";
+
     // ── Firebase fields ────────────────────────────────────────────────────
     private String senderId;
-    private String message;
+    private String messageType = TYPE_TEXT; // default to text for backward compatibility
+    private String message; // text content (for text messages)
+    private String mediaUrl; // Cloudinary URL (for image/video/file)
+    private String fileName; // Original file name (for file messages)
     private long timestamp;
     private Map<String, Boolean> deliveredTo = new HashMap<>();
     private Map<String, Boolean> readBy = new HashMap<>();
@@ -61,12 +76,36 @@ public class MessageModel {
         this.senderId = v;
     }
 
+    public String getMessageType() {
+        return messageType != null ? messageType : TYPE_TEXT;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
+    }
+
     public String getMessage() {
         return message;
     }
 
     public void setMessage(String v) {
         this.message = v;
+    }
+
+    public String getMediaUrl() {
+        return mediaUrl;
+    }
+
+    public void setMediaUrl(String mediaUrl) {
+        this.mediaUrl = mediaUrl;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public long getTimestamp() {

@@ -1,6 +1,7 @@
 package com.example.cmcs;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,8 +23,10 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.cmcs.adapters.MessageAdapter;
 import com.example.cmcs.models.MessageModel;
+import com.example.cmcs.utils.CloudinaryUploader;
 import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -82,6 +87,12 @@ public class ChatActivity extends AppCompatActivity {
     private ImageView btnSend;
     private MessageAdapter adapter;
     private LinearLayoutManager layoutManager;
+
+    // ── File picker ──────────────────────────────────────────────────────────
+    private ActivityResultLauncher<String> imagePickerLauncher;
+    private ActivityResultLauncher<String> videoPickerLauncher;
+    private ActivityResultLauncher<String> documentPickerLauncher;
+    private ActivityResultLauncher<String> filePickerLauncher;
 
     // ── Reply Logic ──────────────────────────────────────────────
     private View layoutReplyPreview;
@@ -166,6 +177,9 @@ public class ChatActivity extends AppCompatActivity {
 
         // Apply modern immersive edge-to-edge layout
         setupImmersiveEdgeToEdge();
+
+        // Initialize file pickers
+        initializeFilePickers();
 
         // 1. Auth check
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -266,8 +280,7 @@ public class ChatActivity extends AppCompatActivity {
         // 8. Emoji / Attach placeholders
         findViewById(R.id.btn_emoji).setOnClickListener(v
                 -> Toast.makeText(this, "Emoji picker coming soon", Toast.LENGTH_SHORT).show());
-        findViewById(R.id.btn_attach).setOnClickListener(v
-                -> Toast.makeText(this, "Attachments coming soon", Toast.LENGTH_SHORT).show());
+        findViewById(R.id.btn_attach).setOnClickListener(v -> showAttachmentPicker());
 
         // 9. Load messages
         verifyChatExists();
@@ -683,5 +696,208 @@ public class ChatActivity extends AppCompatActivity {
         i.putExtra(EXTRA_OTHER_NAME, otherName);
         i.putExtra(EXTRA_OTHER_AVATAR, otherAvatar);
         return i;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Attachment System
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    /**
+     * Initialize file picker launchers for different attachment types
+     */
+    private void initializeFilePickers() {
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        uploadAttachment(uri, MessageModel.TYPE_IMAGE, "chat_images");
+                    }
+                });
+
+        videoPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        uploadAttachment(uri, MessageModel.TYPE_VIDEO, "chat_videos");
+                    }
+                });
+
+        documentPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        uploadAttachment(uri, MessageModel.TYPE_FILE, "chat_files");
+                    }
+                });
+
+        filePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        uploadAttachment(uri, MessageModel.TYPE_FILE, "chat_files");
+                    }
+                });
+    }
+
+    /**
+     * Show attachment picker bottom sheet
+     */
+    private void showAttachmentPicker() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheet = getLayoutInflater().inflate(R.layout.bottomsheet_attachment_picker, null);
+        dialog.setContentView(sheet);
+
+        sheet.findViewById(R.id.option_image).setOnClickListener(v -> {
+            dialog.dismiss();
+            imagePickerLauncher.launch("image/*");
+        });
+
+        sheet.findViewById(R.id.option_video).setOnClickListener(v -> {
+            dialog.dismiss();
+            videoPickerLauncher.launch("video/*");
+        });
+
+        sheet.findViewById(R.id.option_document).setOnClickListener(v -> {
+            dialog.dismiss();
+            documentPickerLauncher.launch("application/pdf");
+        });
+
+        sheet.findViewById(R.id.option_file).setOnClickListener(v -> {
+            dialog.dismiss();
+            filePickerLauncher.launch("*/*");
+        });
+
+        dialog.show();
+    }
+
+    /**
+     * Upload attachment to Cloudinary and send message
+     */
+    private void uploadAttachment(Uri uri, String messageType, String folder) {
+        // Show uploading toast
+        Toast.makeText(this, "Uploading...", Toast.LENGTH_SHORT).show();
+
+        // Get file name
+        String fileName = getFileName(uri);
+
+        CloudinaryUploader.upload(
+                this,
+                uri,
+                folder,
+                new CloudinaryUploader.Callback() {
+                    @Override
+                    public void onProgress(int percent) {
+                        // Could show progress bar here
+                    }
+
+                    @Override
+                    public void onSuccess(String secureUrl) {
+                        runOnUiThread(() -> {
+                            sendMediaMessage(messageType, secureUrl, fileName);
+                            Toast.makeText(ChatActivity.this,
+                                    "Uploaded successfully",
+                                    Toast.LENGTH_SHORT).show();
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(ChatActivity.this,
+                                    "Upload failed: " + error,
+                                    Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
+    }
+
+    /**
+     * Send media message to Firebase
+     */
+    private void sendMediaMessage(String messageType, String mediaUrl, String fileName) {
+        String messageId = messagesRef.push().getKey();
+        if (messageId == null) {
+            return;
+        }
+
+        Map<String, Object> msgData = new HashMap<>();
+        msgData.put("senderId", myUid);
+        msgData.put("messageType", messageType);
+        msgData.put("mediaUrl", mediaUrl);
+        
+        if (fileName != null && !fileName.isEmpty()) {
+            msgData.put("fileName", fileName);
+        }
+        
+        msgData.put("timestamp", ServerValue.TIMESTAMP);
+
+        // Build multi-path update
+        Map<String, Object> update = new HashMap<>();
+        update.put("messages/" + chatId + "/" + messageId, msgData);
+        
+        // Update last message preview based on type
+        String lastMessagePreview;
+        switch (messageType) {
+            case MessageModel.TYPE_IMAGE:
+                lastMessagePreview = "📷 Image";
+                break;
+            case MessageModel.TYPE_VIDEO:
+                lastMessagePreview = "🎥 Video";
+                break;
+            case MessageModel.TYPE_FILE:
+                lastMessagePreview = "📎 " + (fileName != null ? fileName : "File");
+                break;
+            default:
+                lastMessagePreview = "Attachment";
+                break;
+        }
+        
+        update.put("chats/" + chatId + "/lastMessage", lastMessagePreview);
+        update.put("chats/" + chatId + "/lastTimestamp", ServerValue.TIMESTAMP);
+
+        // Ensure chat metadata exists
+        update.put("chats/" + chatId + "/type", "private");
+        update.put("chats/" + chatId + "/participants/" + myUid, true);
+        update.put("chats/" + chatId + "/participants/" + otherUid, true);
+
+        // Update receiver's userChats
+        update.put("userChats/" + otherUid + "/" + chatId + "/visible", true);
+        update.put("userChats/" + otherUid + "/" + chatId + "/unreadCount",
+                ServerValue.increment(1));
+        
+        // Reset my own unread count
+        update.put("userChats/" + myUid + "/" + chatId + "/visible", true);
+        update.put("userChats/" + myUid + "/" + chatId + "/unreadCount", 0);
+
+        FirebaseDatabase.getInstance().getReference()
+                .updateChildren(update)
+                .addOnFailureListener(e
+                        -> Toast.makeText(this, "Failed to send: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
+    }
+
+    /**
+     * Get file name from URI
+     */
+    private String getFileName(Uri uri) {
+        String fileName = null;
+        if (uri.getScheme() != null && uri.getScheme().equals("content")) {
+            try (android.database.Cursor cursor = getContentResolver().query(
+                    uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(
+                            android.provider.OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex != -1) {
+                        fileName = cursor.getString(nameIndex);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (fileName == null) {
+            fileName = uri.getLastPathSegment();
+        }
+        return fileName;
     }
 }
