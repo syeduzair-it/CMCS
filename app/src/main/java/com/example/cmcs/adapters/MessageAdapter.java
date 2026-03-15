@@ -168,6 +168,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         public void bind(MessageModel msg, String otherUid) {
             tvMessage.setText(msg.getMessage());
+            
+            // Enable clickable links
+            tvMessage.setAutoLinkMask(android.text.util.Linkify.WEB_URLS);
+            tvMessage.setLinksClickable(true);
+            tvMessage.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+            
             tvTimestamp.setText(formatTime(msg.getTimestamp()));
 
             tvForwarded.setVisibility(msg.isForwarded() ? View.VISIBLE : View.GONE);
@@ -216,6 +222,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         public void bind(MessageModel msg) {
             tvMessage.setText(msg.getMessage());
+            
+            // Enable clickable links
+            tvMessage.setAutoLinkMask(android.text.util.Linkify.WEB_URLS);
+            tvMessage.setLinksClickable(true);
+            tvMessage.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+            
             tvTimestamp.setText(formatTime(msg.getTimestamp()));
 
             tvForwarded.setVisibility(msg.isForwarded() ? View.VISIBLE : View.GONE);

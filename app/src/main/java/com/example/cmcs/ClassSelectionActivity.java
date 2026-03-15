@@ -28,12 +28,17 @@ import java.util.List;
 
 public class ClassSelectionActivity extends AppCompatActivity {
 
+    public static final String EXTRA_MODE = "mode";
+    public static final String MODE_ATTENDANCE = "attendance";
+    public static final String MODE_TIMETABLE = "timetable";
+
     private MaterialToolbar toolbar;
     private RecyclerView recyclerClasses;
     private ProgressBar progressBar;
     private ClassSelectionAdapter adapter;
     private List<String> classList;
     private String userDepartment = "";
+    private String mode = MODE_ATTENDANCE; // default mode
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,19 +48,39 @@ public class ClassSelectionActivity extends AppCompatActivity {
         // Apply edge-to-edge with light status bar (dark icons for white background)
         WindowInsetsHelper.setupEdgeToEdge(this, true);
 
+        // Get mode from intent
+        mode = getIntent().getStringExtra(EXTRA_MODE);
+        if (mode == null) {
+            mode = MODE_ATTENDANCE;
+        }
+
         toolbar = findViewById(R.id.toolbarClassSelection);
         recyclerClasses = findViewById(R.id.recyclerClasses);
         progressBar = findViewById(R.id.progressBarClasses);
+
+        // Update toolbar title based on mode
+        if (MODE_TIMETABLE.equals(mode)) {
+            toolbar.setTitle("Select Class");
+        }
 
         toolbar.setNavigationOnClickListener(v -> finish());
 
         classList = new ArrayList<>();
         recyclerClasses.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ClassSelectionAdapter(this, classList, className -> {
-            Intent intent = new Intent(ClassSelectionActivity.this, AttendanceSessionActivity.class);
-            intent.putExtra("classId", className);
-            intent.putExtra("department", userDepartment);
-            startActivity(intent);
+            if (MODE_TIMETABLE.equals(mode)) {
+                // Launch UploadTimetableActivity
+                Intent intent = new Intent(ClassSelectionActivity.this, UploadTimetableActivity.class);
+                intent.putExtra(UploadTimetableActivity.EXTRA_CLASS_ID, className.replace(" ", "_"));
+                intent.putExtra(UploadTimetableActivity.EXTRA_CLASS_NAME, className);
+                startActivity(intent);
+            } else {
+                // Launch AttendanceSessionActivity (default)
+                Intent intent = new Intent(ClassSelectionActivity.this, AttendanceSessionActivity.class);
+                intent.putExtra("classId", className);
+                intent.putExtra("department", userDepartment);
+                startActivity(intent);
+            }
         });
         recyclerClasses.setAdapter(adapter);
 
