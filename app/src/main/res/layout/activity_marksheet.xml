@@ -67,15 +67,12 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <!--
-              Semester cards are added here programmatically by
-              MarksheetActivity.buildSemesterCards()
-            -->
-            <LinearLayout
-                android:id="@+id/container_semesters"
+            <!-- Marksheet Grid RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvMarksheets"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:nestedScrollingEnabled="false"
                 android:visibility="gone" />
 
         </LinearLayout>

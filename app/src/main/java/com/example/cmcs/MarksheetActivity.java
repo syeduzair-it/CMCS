@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,8 +15,10 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.cmcs.adapters.MarksheetAdapter;
 import com.example.cmcs.db.MarksheetDao;
 import com.example.cmcs.db.MarksheetDatabase;
 import com.example.cmcs.db.MarksheetEntity;
@@ -35,25 +36,29 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * MarksheetActivity — Phase 3
+ * MarksheetActivity — Phase 3 (Grid UI Upgrade)
  *
  * ALL Room/DAO calls run on a single background executor thread. No
  * allowMainThreadQueries(). No AsyncTask. No Thread.sleep().
  *
  * Year → max semesters: Year 1=2, Year 2=4, Year 3=6, Year 4=8. Files:
  * getFilesDir()/marksheets/semester_X.<ext>
+ * 
+ * Grid layout with image previews using RecyclerView and GridLayoutManager.
  */
 public class MarksheetActivity extends AppCompatActivity {
 
     // ── Views ─────────────────────────────────────────────────────────────
     private ProgressBar loadingSpinner;
-    private LinearLayout containerSemesters;
+    private RecyclerView rvMarksheets;
     private TextView tvLabel;
 
     // ── Room ──────────────────────────────────────────────────────────────
@@ -69,6 +74,9 @@ public class MarksheetActivity extends AppCompatActivity {
      */
     private int pendingSemester = -1;
     private int maxSemesters = 0;
+    
+    // ── Adapter ───────────────────────────────────────────────────────────
+    private MarksheetAdapter adapter;
 
     // ── File picker ───────────────────────────────────────────────────────
     private final ActivityResultLauncher<Intent> filePicker
@@ -101,7 +109,7 @@ public class MarksheetActivity extends AppCompatActivity {
         WindowInsetsHelper.setupEdgeToEdge(this, true);
 
         loadingSpinner = findViewById(R.id.marksheet_loading);
-        containerSemesters = findViewById(R.id.container_semesters);
+        rvMarksheets = findViewById(R.id.rvMarksheets);
         tvLabel = findViewById(R.id.tv_marksheet_label);
 
         setupToolbar();
@@ -146,114 +154,127 @@ public class MarksheetActivity extends AppCompatActivity {
                         int year = 2; // safe default
                         String yearStr = snapshot.getValue(String.class);
                         if (yearStr != null && !yearStr.isEmpty()) {
-                            try {
-                                year = Integer.parseInt(yearStr.trim());
-                            } catch (NumberFormatException ignored) {
-                            }
+                            year = parseYearFromString(yearStr);
                         }
-                        year = Math.max(1, Math.min(4, year));   // clamp 1-4
+                        year = Math.max(1, Math.min(3, year));   // clamp 1-3
                         maxSemesters = year * 2;
                         buildSemesterCards(maxSemesters);
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        maxSemesters = 8;                         // show all on failure
+                        maxSemesters = 6;                         // show Year 3 default on failure
                         buildSemesterCards(maxSemesters);
                     }
                 });
     }
 
+    /**
+     * Parse year from Firebase string format.
+     * Handles formats like: "1st_year", "2nd_year", "3rd_year", "Year: 1st_year", "1", "2", "3"
+     * 
+     * @param yearStr The year string from Firebase
+     * @return Year number (1, 2, or 3)
+     */
+    private int parseYearFromString(String yearStr) {
+        if (yearStr == null || yearStr.isEmpty()) {
+            return 2; // default to Year 2
+        }
+        
+        // Remove "Year: " prefix if present
+        String cleaned = yearStr.replace("Year:", "").trim();
+        
+        // Try to extract year number from formats like "1st_year", "2nd_year", "3rd_year"
+        if (cleaned.contains("1st") || cleaned.startsWith("1")) {
+            return 1;
+        } else if (cleaned.contains("2nd") || cleaned.startsWith("2")) {
+            return 2;
+        } else if (cleaned.contains("3rd") || cleaned.startsWith("3")) {
+            return 3;
+        }
+        
+        // Try direct integer parsing as fallback
+        try {
+            int parsed = Integer.parseInt(cleaned.replaceAll("[^0-9]", ""));
+            if (parsed >= 1 && parsed <= 3) {
+                return parsed;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+        
+        return 2; // default to Year 2 if parsing fails
+    }
+
     // ─────────────────────────────────────────────────────────────────────
-    // Build cards — DB read on executor, UI update on main thread
+    // Build grid — DB read on executor, UI update on main thread
     // ─────────────────────────────────────────────────────────────────────
     private void buildSemesterCards(int count) {
         dbExecutor.execute(() -> {
             // Read all records off-thread
-            final MarksheetEntity[] records = new MarksheetEntity[count + 1];
-            for (int s = 1; s <= count; s++) {
-                records[s] = dao.getMarksheetForSemester(s);   // ← background thread
+            List<MarksheetEntity> allRecords = dao.getAllMarksheets();
+            
+            // Create display list with all semesters (1 to count)
+            final List<MarksheetEntity> displayList = new ArrayList<>();
+            for (int sem = 1; sem <= count; sem++) {
+                MarksheetEntity found = findBySemester(allRecords, sem);
+                if (found != null) {
+                    displayList.add(found);
+                } else {
+                    // Empty placeholder for semester
+                    MarksheetEntity placeholder = new MarksheetEntity();
+                    placeholder.semesterNumber = sem;
+                    placeholder.filePath = null;
+                    placeholder.fileName = null;
+                    displayList.add(placeholder);
+                }
             }
 
             runOnUiThread(() -> {
                 loadingSpinner.setVisibility(View.GONE);
                 tvLabel.setVisibility(View.VISIBLE);
-                containerSemesters.setVisibility(View.VISIBLE);
-                containerSemesters.removeAllViews();
+                rvMarksheets.setVisibility(View.VISIBLE);
+                
+                // Setup GridLayoutManager with 2 columns
+                GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+                rvMarksheets.setLayoutManager(layoutManager);
+                
+                // Setup adapter
+                adapter = new MarksheetAdapter(displayList, new MarksheetAdapter.OnMarksheetClickListener() {
+                    @Override
+                    public void onMarksheetClick(MarksheetEntity marksheet) {
+                        // View full marksheet
+                        dbExecutor.execute(() -> {
+                            MarksheetEntity current = dao.getMarksheetForSemester(marksheet.semesterNumber);
+                            runOnUiThread(() -> {
+                                if (current != null) {
+                                    showActionDialog(marksheet.semesterNumber, current);
+                                }
+                            });
+                        });
+                    }
 
-                for (int sem = 1; sem <= count; sem++) {
-                    addSemesterCard(sem, records[sem]);
-                }
+                    @Override
+                    public void onUploadClick(int semester) {
+                        // Upload marksheet
+                        openFilePicker(semester);
+                    }
+                });
+                
+                rvMarksheets.setAdapter(adapter);
             });
         });
     }
-
+    
     /**
-     * Inflates a single semester card and attaches it to the container.
+     * Find marksheet entity by semester number from list.
      */
-    private void addSemesterCard(int semester, MarksheetEntity record) {
-        CardView card = new CardView(this);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 0, 0, dpToPx(12));
-        card.setLayoutParams(params);
-        card.setCardElevation(dpToPx(3));
-        card.setRadius(dpToPx(14));
-        card.setCardBackgroundColor(
-                getResources().getColor(R.color.surfaceColor, null));
-
-        LinearLayout inner = new LinearLayout(this);
-        inner.setOrientation(LinearLayout.HORIZONTAL);
-        inner.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
-        inner.setGravity(android.view.Gravity.CENTER_VERTICAL);
-
-        // Semester label
-        TextView tvSem = new TextView(this);
-        tvSem.setLayoutParams(new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        tvSem.setText("Semester " + semester);
-        tvSem.setTextColor(getResources().getColor(R.color.textPrimary, null));
-        tvSem.setTextSize(15);
-        tvSem.setTypeface(tvSem.getTypeface(), android.graphics.Typeface.BOLD);
-
-        // Status label
-        TextView tvStatus = new TextView(this);
-        tvStatus.setPadding(dpToPx(8), 0, 0, 0);
-        if (record != null) {
-            tvStatus.setText("✓ " + record.fileName);
-            tvStatus.setTextColor(
-                    getResources().getColor(android.R.color.holo_green_dark, null));
-            tvStatus.setTextSize(11);
-            tvStatus.setMaxLines(1);
-            tvStatus.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        } else {
-            tvStatus.setText("No file");
-            tvStatus.setTextColor(
-                    getResources().getColor(R.color.textSecondary, null));
-            tvStatus.setTextSize(12);
+    private MarksheetEntity findBySemester(List<MarksheetEntity> list, int semester) {
+        for (MarksheetEntity entity : list) {
+            if (entity.semesterNumber == semester) {
+                return entity;
+            }
         }
-
-        inner.addView(tvSem);
-        inner.addView(tvStatus);
-        card.addView(inner);
-
-        // ── Click: DB read MUST happen on executor ──────────────────────
-        card.setOnClickListener(v -> {
-            dbExecutor.execute(() -> {
-                MarksheetEntity current
-                        = dao.getMarksheetForSemester(semester);  // ← background thread
-                runOnUiThread(() -> {
-                    if (current == null) {
-                        openFilePicker(semester);
-                    } else {
-                        showActionDialog(semester, current);
-                    }
-                });
-            });
-        });
-
-        containerSemesters.addView(card);
+        return null;
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -428,9 +449,5 @@ public class MarksheetActivity extends AppCompatActivity {
     private void showError(String msg) {
         loadingSpinner.setVisibility(View.GONE);
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-    }
-
-    private int dpToPx(int dp) {
-        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 }

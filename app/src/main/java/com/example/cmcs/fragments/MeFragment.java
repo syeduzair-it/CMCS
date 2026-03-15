@@ -356,10 +356,12 @@ public class MeFragment extends Fragment {
     // ─────────────────────────────────────────────────────────────────────
     private List<MeMenuItem> buildStudentMenu() {
         List<MeMenuItem> items = new ArrayList<>();
-        items.add(new MeMenuItem("My Attendance", R.drawable.ic_notice));
-        items.add(new MeMenuItem("Fees", R.drawable.ic_home));
-        items.add(new MeMenuItem("Notes", R.drawable.ic_notice));
-        items.add(new MeMenuItem("Marksheet", R.drawable.ic_notice));
+        items.add(new MeMenuItem("My Attendance", R.drawable.ic_attendence));
+        items.add(new MeMenuItem("Fees", R.drawable.ic_fees));
+        items.add(new MeMenuItem("Notes", R.drawable.ic_notes));
+        items.add(new MeMenuItem("Marksheet", R.drawable.ic_marksheet));
+        items.add(new MeMenuItem("Timetable", R.drawable.ic_timetable));
+        items.add(new MeMenuItem("ID Card", R.drawable.ic_id_card));
         items.add(new MeMenuItem("University ID & Password", R.drawable.ic_drawer_profile));
         items.add(new MeMenuItem("Logout", R.drawable.ic_drawer_logout));
         return items;
@@ -367,9 +369,11 @@ public class MeFragment extends Fragment {
 
     private List<MeMenuItem> buildTeacherMenu() {
         List<MeMenuItem> items = new ArrayList<>();
-        items.add(new MeMenuItem("My Time Table", R.drawable.ic_tp));
-        items.add(new MeMenuItem("Uploaded Notes", R.drawable.ic_notice));
-        items.add(new MeMenuItem("Notices Posted", R.drawable.ic_me));
+        items.add(new MeMenuItem("My Time Table", R.drawable.ic_timetable));
+        items.add(new MeMenuItem("Upload Timetable", R.drawable.ic_timetable));
+        items.add(new MeMenuItem("Uploaded Notes", R.drawable.ic_notes));
+        items.add(new MeMenuItem("Notices Posted", R.drawable.ic_notice));
+        items.add(new MeMenuItem("ID Card", R.drawable.ic_id_card));
         items.add(new MeMenuItem("Logout", R.drawable.ic_drawer_logout));
         return items;
     }
@@ -401,11 +405,23 @@ public class MeFragment extends Fragment {
             case "Marksheet":
                 startActivity(new Intent(requireContext(), com.example.cmcs.MarksheetActivity.class));
                 break;
+            case "Timetable":
+                startActivity(new Intent(requireContext(), com.example.cmcs.StudentTimetableActivity.class));
+                break;
+            case "ID Card":
+                startActivity(new Intent(requireContext(), com.example.cmcs.IdCardActivity.class));
+                break;
             case "University ID & Password":
                 startActivity(new Intent(requireContext(), com.example.cmcs.UniversityCredentialsActivity.class));
                 break;
             case "My Time Table":
                 startActivity(new Intent(requireContext(), com.example.cmcs.TeacherTimeTableActivity.class));
+                break;
+            case "Upload Timetable":
+                Intent intent = new Intent(requireContext(), com.example.cmcs.ClassSelectionActivity.class);
+                intent.putExtra(com.example.cmcs.ClassSelectionActivity.EXTRA_MODE, 
+                        com.example.cmcs.ClassSelectionActivity.MODE_TIMETABLE);
+                startActivity(intent);
                 break;
             case "Notes":
                 startActivity(new Intent(requireContext(), com.example.cmcs.NotesClassActivity.class));

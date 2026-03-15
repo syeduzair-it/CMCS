@@ -267,7 +267,7 @@
                     android:layout_height="80dp"
                     android:alpha="0.35"
                     android:contentDescription="No fees data"
-                    android:src="@drawable/ic_notice"
+                    android:src="@drawable/ic_fees_admin"
                     app:tint="@color/colorPrimary" />
 
                 <TextView

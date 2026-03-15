@@ -95,6 +95,7 @@ public class ChatActivity extends AppCompatActivity {
     /**
      * Configures modern immersive edge-to-edge layout for chat screen.
      * Makes status bar transparent and extends toolbar into status bar area.
+     * Handles keyboard (IME) insets to keep input field above keyboard.
      */
     private void setupImmersiveEdgeToEdge() {
         // Enable edge-to-edge mode
@@ -110,14 +111,19 @@ public class ChatActivity extends AppCompatActivity {
             controller.setAppearanceLightStatusBars(false);
         }
         
-        // Apply insets to toolbar so it extends into status bar area
+        // Apply insets to handle both status bar and keyboard
         View rootView = findViewById(android.R.id.content);
         if (rootView != null) {
             androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+                // Get system bars insets (status bar, navigation bar)
                 androidx.core.graphics.Insets systemBars = 
                     insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
                 
-                // Find toolbar and add top padding equal to status bar height + base padding
+                // Get IME (keyboard) insets
+                androidx.core.graphics.Insets imeInsets = 
+                    insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
+                
+                // Apply status bar inset to toolbar
                 View toolbar = findViewById(R.id.chatHeader);
                 if (toolbar != null) {
                     // Base padding of 8dp converted to pixels
@@ -127,6 +133,21 @@ public class ChatActivity extends AppCompatActivity {
                         systemBars.top + basePaddingPx,
                         toolbar.getPaddingRight(),
                         toolbar.getPaddingBottom()
+                    );
+                }
+                
+                // Apply keyboard inset to input container to keep it above keyboard
+                View inputContainer = findViewById(R.id.chatInputContainer);
+                if (inputContainer != null) {
+                    // Get original bottom padding (8dp)
+                    int originalBottomPaddingPx = (int) (8 * getResources().getDisplayMetrics().density);
+                    // Use the larger of IME bottom or navigation bar bottom, plus original padding
+                    int bottomInset = Math.max(imeInsets.bottom, systemBars.bottom);
+                    inputContainer.setPadding(
+                        inputContainer.getPaddingLeft(),
+                        inputContainer.getPaddingTop(),
+                        inputContainer.getPaddingRight(),
+                        bottomInset > 0 ? bottomInset : originalBottomPaddingPx
                     );
                 }
                 

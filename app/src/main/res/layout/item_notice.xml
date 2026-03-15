@@ -1,166 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/notice_card_bg"
-    android:layout_marginHorizontal="12dp"
-    android:layout_marginVertical="6dp"
-    android:padding="14dp">
+    android:layout_marginHorizontal="@dimen/_12sdp"
+    android:layout_marginVertical="@dimen/_6sdp"
+    app:cardBackgroundColor="@color/cmcs_card"
+    app:cardCornerRadius="@dimen/_12sdp"
+    app:cardElevation="2dp"
+    app:strokeColor="@color/cmcs_divider"
+    app:strokeWidth="1dp">
 
-    <!-- Header Row: creator + timestamp -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:orientation="vertical"
+        android:padding="@dimen/_14sdp">
 
-        <TextView
-            android:id="@+id/tvCreatorName"
-            android:layout_width="0dp"
+        <!-- Header Row: creator + timestamp -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/colorPrimary"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
+            <TextView
+                android:id="@+id/tvCreatorName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/cmcs_primary_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTimestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/textSecondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Edited tag -->
         <TextView
-            android:id="@+id/tvTimestamp"
+            android:id="@+id/tvEdited"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="(edited)"
             android:textColor="@color/textSecondary"
-            android:textSize="11sp" />
-    </LinearLayout>
-
-    <!-- Edited tag -->
-    <TextView
-        android:id="@+id/tvEdited"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="(edited)"
-        android:textColor="@color/textSecondary"
-        android:textSize="10sp"
-        android:visibility="gone" />
-
-    <!-- Notice Title -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textColor="@color/textPrimary"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-    <!-- Notice Description (max 3 lines) -->
-    <TextView
-        android:id="@+id/tvDescription"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:ellipsize="end"
-        android:maxLines="3"
-        android:textColor="@color/textSecondary"
-        android:textSize="14sp" />
-
-    <!-- Media Preview Area -->
-    <FrameLayout
-        android:id="@+id/mediaPreviewContainer"
-        android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:layout_marginTop="10dp"
-        android:background="@color/surfaceElevated"
-        android:visibility="gone">
-
-        <!-- Image thumbnail -->
-        <ImageView
-            android:id="@+id/ivImagePreview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitCenter"
+            android:textSize="10sp"
             android:visibility="gone" />
 
-        <!-- PDF / Video icon centre -->
-        <LinearLayout
-            android:id="@+id/nonImagePreview"
-            android:layout_width="wrap_content"
+        <!-- Notice Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:orientation="vertical"
+            android:layout_marginTop="@dimen/_8sdp"
+            android:textColor="@color/textPrimary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <!-- Notice Description -->
+        <TextView
+            android:id="@+id/tvDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_4sdp"
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:textColor="@color/textSecondary"
+            android:textSize="13sp"
+            android:lineSpacingMultiplier="1.3" />
+
+        <!-- Media Preview Area -->
+        <FrameLayout
+            android:id="@+id/mediaPreviewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_160sdp"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:background="@color/surfaceElevated"
             android:visibility="gone">
 
             <ImageView
-                android:id="@+id/ivMediaIcon"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:scaleType="fitCenter" />
+                android:id="@+id/ivImagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/tvMediaLabel"
+            <LinearLayout
+                android:id="@+id/nonImagePreview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textColor="@color/textSecondary"
-                android:textSize="13sp" />
-        </LinearLayout>
-    </FrameLayout>
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-    <!-- Divider -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="12dp"
-        android:background="@color/dividerColor" />
+                <ImageView
+                    android:id="@+id/ivMediaIcon"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:scaleType="fitCenter" />
 
-    <!-- View Count Row: visible to teachers only, tappable to open viewer list -->
-    <LinearLayout
-        android:id="@+id/llViewRow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        android:visibility="gone">
+                <TextView
+                    android:id="@+id/tvMediaLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_8sdp"
+                    android:textColor="@color/textSecondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </FrameLayout>
 
-        <TextView
-            android:id="@+id/tvViewCount"
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:background="@color/dividerColor" />
+
+        <!-- View Count Row: teachers only -->
+        <LinearLayout
+            android:id="@+id/llViewRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="\uD83D\uDC41 0 views"
-            android:textColor="@color/textSecondary"
-            android:textSize="13sp" />
+            android:layout_marginTop="@dimen/_6sdp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvViewCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDC41 0 views"
+                android:textColor="@color/textSecondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Action Row: Edit + Delete (owner only) -->
+        <LinearLayout
+            android:id="@+id/actionRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_6sdp"
+            android:gravity="end"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/btnEdit"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Edit notice"
+                android:src="@drawable/ic_edit" />
+
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="@dimen/_8sdp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Delete notice"
+                android:src="@drawable/ic_delete" />
+        </LinearLayout>
+
     </LinearLayout>
 
-    <!-- Action Row: Edit + Delete (owner only) -->
-    <LinearLayout
-        android:id="@+id/actionRow"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="end"
-        android:orientation="horizontal"
-        android:visibility="gone">
-
-        <ImageButton
-            android:id="@+id/btnEdit"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Edit notice"
-            android:src="@drawable/ic_edit" />
-
-        <ImageButton
-            android:id="@+id/btnDelete"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Delete notice"
-            android:src="@drawable/ic_delete" />
-    </LinearLayout>
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

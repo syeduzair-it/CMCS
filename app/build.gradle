@@ -30,12 +30,12 @@ android {
 }
 
 // ── Delete conflicting drawable XMLs before resource merge ─────────────────
-// ic_attach.xml and ic_edit.xml were accidentally created alongside existing
-// PNGs of the same name. We delete them here via Groovy/Java so the build
-// always succeeds regardless of whether they were manually deleted.
+// ic_attach.xml was accidentally created alongside existing PNG of the same name.
+// We delete it here via Groovy/Java so the build always succeeds.
+// Note: ic_edit.xml is now intentionally a vector drawable (PNG was deleted).
 afterEvaluate {
     def drawableDir = file("src/main/res/drawable")
-    def conflicting = ["ic_attach.xml", "ic_edit.xml"]
+    def conflicting = ["ic_attach.xml"]
 
     tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Resources") }.each { mergeTask ->
         mergeTask.doFirst {

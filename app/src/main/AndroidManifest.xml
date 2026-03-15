@@ -102,6 +102,10 @@
         <activity
             android:name=".MarksheetActivity"
             android:exported="false" />
+        <!-- ID Card (local storage) -->
+        <activity
+            android:name=".IdCardActivity"
+            android:exported="false" />
         <!-- University ID & Password (reauthentication gated) -->
         <activity
             android:name=".UniversityCredentialsActivity"
@@ -110,6 +114,14 @@
         <!-- Teacher Time Table (local image, teacher-only) -->
         <activity
             android:name=".TeacherTimeTableActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
+        <!-- Timetable System (Firebase-based, class timetables) -->
+        <activity
+            android:name=".UploadTimetableActivity"
+            android:exported="false" />
+        <activity
+            android:name=".StudentTimetableActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize" />
         <!-- Notes System — class → subject → note hierarchy -->

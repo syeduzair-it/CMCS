@@ -28,4 +28,10 @@ public interface MarksheetDao {
      */
     @Query("DELETE FROM marksheets WHERE semesterNumber = :semester")
     void deleteMarksheetForSemester(int semester);
+
+    /**
+     * Fetch all stored marksheets.
+     */
+    @Query("SELECT * FROM marksheets ORDER BY semesterNumber ASC")
+    java.util.List<MarksheetEntity> getAllMarksheets();
 }

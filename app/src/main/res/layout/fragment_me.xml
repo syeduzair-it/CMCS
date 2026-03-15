@@ -73,11 +73,11 @@
                             android:layout_width="@dimen/_30sdp"
                             android:layout_height="@dimen/_30sdp"
                             android:layout_gravity="bottom|end"
-                            android:background="@color/cmcs_primary"
+                            android:background="@drawable/bg_edit_profile_circle"
                             android:contentDescription="Edit profile image"
                             android:padding="@dimen/_5sdp"
-                            android:src="@drawable/ic_edit" />
-
+                            app:srcCompat="@drawable/ic_edit"
+                            app:tint="@android:color/white"/>
                     </FrameLayout>
 
                     <!-- Name -->
