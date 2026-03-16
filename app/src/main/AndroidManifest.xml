@@ -137,6 +137,7 @@
         <activity android:name=".NotesSubjectActivity" android:exported="false" />
         <activity android:name=".NotesListActivity" android:exported="false" />
         <activity android:name=".AddNoteActivity" android:exported="false" />
+        <activity android:name=".NoteViewersActivity" android:exported="false" />
         <activity android:name=".NoticesPostedActivity" android:exported="false" />
         <!-- Stories System -->
         <activity android:name=".AddStoryActivity"

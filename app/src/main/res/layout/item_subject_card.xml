@@ -27,6 +27,14 @@
             android:textSize="15sp"
             android:textStyle="bold" />
 
+        <View
+            android:id="@+id/view_subject_badge"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/badge_dot"
+            android:visibility="gone" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

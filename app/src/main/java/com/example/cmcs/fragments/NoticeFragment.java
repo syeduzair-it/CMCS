@@ -1,7 +1,9 @@
 package com.example.cmcs.fragments;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,14 +16,20 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.cmcs.AddNoticeActivity;
 import com.example.cmcs.R;
+import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Host fragment for the Notice board.
@@ -52,6 +60,10 @@ public class NoticeFragment extends Fragment {
     private String currentDept;
     private String currentCourse;
     private String currentYear;
+
+    // ── Tab badge listeners ───────────────────────────────────────────────
+    private final List<DatabaseReference>  tabBadgeRefs      = new ArrayList<>();
+    private final List<ValueEventListener> tabBadgeListeners = new ArrayList<>();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────
     @Nullable
@@ -93,14 +105,24 @@ public class NoticeFragment extends Fragment {
                         if (!isAdded()) {
                             return;
                         }
-                        currentRole = snapshot.child("role").getValue(String.class);
-                        currentName = snapshot.child("name").getValue(String.class);
-                        currentDept = snapshot.child("department").getValue(String.class);
+                        currentRole   = snapshot.child("role").getValue(String.class);
+                        currentName   = snapshot.child("name").getValue(String.class);
+                        currentDept   = snapshot.child("department").getValue(String.class);
                         currentCourse = snapshot.child("course").getValue(String.class);
-                        currentYear = snapshot.child("year").getValue(String.class);
+                        currentYear   = snapshot.child("year").getValue(String.class);
+
+                        Log.d("NOTICE_BADGE", "Profile loaded — role: " + currentRole);
 
                         setupViewPager();
                         setupFab();
+                        setupTabBadges();
+
+                        // Stamp immediately on first open so the badge clears right away.
+                        // onResume() may have already fired before this callback returned,
+                        // so we stamp here as well to guarantee it runs with a known role.
+                        if ("teacher".equalsIgnoreCase(currentRole)) {
+                            stampAndClearBadge();
+                        }
                     }
 
                     @Override
@@ -112,8 +134,31 @@ public class NoticeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Ensure MainActivity FAB stays hidden when returning to this fragment
         hideMainActivityFab();
+        // Teacher: stamp last-seen time and clear the bottom nav badge.
+        // currentRole may be null here on first open (async profile load not done yet),
+        // so we also stamp inside the profile callback above as a guarantee.
+        if ("teacher".equalsIgnoreCase(currentRole)) {
+            Log.d("NOTICE_BADGE", "onResume — role is teacher, stamping");
+            stampAndClearBadge();
+        } else {
+            Log.d("NOTICE_BADGE", "onResume — role: " + currentRole + " (no stamp)");
+        }
+    }
+
+    /** Writes current time to SharedPreferences and removes the bottom-nav badge. */
+    private void stampAndClearBadge() {
+        if (getContext() == null) return;
+        long now = System.currentTimeMillis();
+        Log.d("NOTICE_BADGE", "stampAndClearBadge — writing lastSeen=" + now);
+        requireContext()
+                .getSharedPreferences("cmcs_prefs", android.content.Context.MODE_PRIVATE)
+                .edit()
+                .putLong("teacher_last_notice_seen", now)
+                .apply();
+        if (getActivity() instanceof com.example.cmcs.MainActivity) {
+            ((com.example.cmcs.MainActivity) getActivity()).stampTeacherNoticeSeen();
+        }
     }
 
     /**
@@ -209,6 +254,208 @@ public class NoticeFragment extends Fragment {
         i.putExtra(AddNoticeActivity.EXTRA_CREATOR_UID, currentUid);
         i.putExtra(AddNoticeActivity.EXTRA_CREATOR_NAME, currentName);
         startActivity(i);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        for (int i = 0; i < tabBadgeRefs.size(); i++) {
+            tabBadgeRefs.get(i).removeEventListener(tabBadgeListeners.get(i));
+        }
+        tabBadgeRefs.clear();
+        tabBadgeListeners.clear();
+    }
+
+    // ── Tab badges ────────────────────────────────────────────────────────
+
+    /**
+     * Attaches listeners on each tab's notice path + noticeViews.
+     * Recomputes unread count per tab on every change and updates the
+     * TabLayout badge accordingly.
+     */
+    private void setupTabBadges() {
+        if (currentUid == null) return;
+
+        // CLASS tab path
+        final String classPath;
+        if ("student".equalsIgnoreCase(currentRole)
+                && currentDept != null && currentCourse != null && currentYear != null) {
+            classPath = "notices/class/"
+                    + sanitize(currentDept) + "/"
+                    + normalizeCourse(currentCourse) + "/"
+                    + normalizeYear(currentYear);
+        } else if ("teacher".equalsIgnoreCase(currentRole) && currentDept != null) {
+            classPath = "notices/class/" + sanitize(currentDept);
+        } else {
+            classPath = null;
+        }
+
+        watchTabPath(classPath,    TAB_CLASS);
+        watchTabPath("notices/college",  TAB_COLLEGE);
+        watchTabPath("notices/training", TAB_TRAINING);
+
+        // Students also re-check when noticeViews changes (a notice gets marked read)
+        if (!"teacher".equalsIgnoreCase(currentRole)) {
+            DatabaseReference viewsRef = FirebaseDatabase.getInstance().getReference("noticeViews");
+            ValueEventListener viewsListener = new ValueEventListener() {
+                @Override public void onDataChange(@NonNull DataSnapshot s) {
+                    if (classPath != null) recomputeTabBadge(classPath, TAB_CLASS);
+                    recomputeTabBadge("notices/college",  TAB_COLLEGE);
+                    recomputeTabBadge("notices/training", TAB_TRAINING);
+                }
+                @Override public void onCancelled(@NonNull DatabaseError e) {}
+            };
+            tabBadgeRefs.add(viewsRef);
+            tabBadgeListeners.add(viewsListener);
+            viewsRef.addValueEventListener(viewsListener);
+        }
+    }
+
+    private void watchTabPath(@Nullable String path, int tabIndex) {
+        if (path == null) {
+            setTabBadge(tabIndex, false);
+            return;
+        }
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
+        ValueEventListener listener = new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot s) {
+                recomputeTabBadge(path, tabIndex);
+            }
+            @Override public void onCancelled(@NonNull DatabaseError e) {
+                setTabBadge(tabIndex, false);
+            }
+        };
+        tabBadgeRefs.add(ref);
+        tabBadgeListeners.add(listener);
+        ref.addValueEventListener(listener);
+    }
+
+    private void recomputeTabBadge(String path, int tabIndex) {
+        if ("teacher".equalsIgnoreCase(currentRole)) {
+            recomputeTabBadgeForTeacher(path, tabIndex);
+        } else {
+            recomputeTabBadgeForStudent(path, tabIndex);
+        }
+    }
+
+    /** Teacher tab badge: timestamp vs SharedPreferences last-seen. */
+    private void recomputeTabBadgeForTeacher(String path, int tabIndex) {
+        if (getContext() == null) return;
+        SharedPreferences prefs = requireContext()
+                .getSharedPreferences("cmcs_prefs", android.content.Context.MODE_PRIVATE);
+        final long lastSeen = prefs.getLong("teacher_last_notice_seen", 0L);
+
+        FirebaseDatabase.getInstance().getReference(path)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        boolean hasUnread = false;
+                        for (String id : extractNoticeIds(snapshot)) {
+                            Long ts = getTimestampFromSnapshot(snapshot, id);
+                            if (ts != null && ts > lastSeen) { hasUnread = true; break; }
+                        }
+                        setTabBadge(tabIndex, hasUnread);
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError e) {
+                        setTabBadge(tabIndex, false);
+                    }
+                });
+    }
+
+    /** Student tab badge: Firebase noticeViews check. */
+    private void recomputeTabBadgeForStudent(String path, int tabIndex) {
+        FirebaseDatabase.getInstance().getReference(path)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        List<String> ids = extractNoticeIds(snapshot);
+                        if (ids.isEmpty()) { setTabBadge(tabIndex, false); return; }
+
+                        AtomicInteger pending = new AtomicInteger(ids.size());
+                        AtomicInteger unread  = new AtomicInteger(0);
+                        for (String noticeId : ids) {
+                            FirebaseDatabase.getInstance()
+                                    .getReference("noticeViews")
+                                    .child(noticeId).child("viewers").child(currentUid)
+                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override public void onDataChange(@NonNull DataSnapshot s) {
+                                            if (!s.exists()) unread.incrementAndGet();
+                                            if (pending.decrementAndGet() == 0)
+                                                setTabBadge(tabIndex, unread.get() > 0);
+                                        }
+                                        @Override public void onCancelled(@NonNull DatabaseError e) {
+                                            if (pending.decrementAndGet() == 0)
+                                                setTabBadge(tabIndex, unread.get() > 0);
+                                        }
+                                    });
+                        }
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError e) {
+                        setTabBadge(tabIndex, false);
+                    }
+                });
+    }
+
+    private void setTabBadge(int tabIndex, boolean show) {
+        if (!isAdded() || tabLayout == null) return;
+        TabLayout.Tab tab = tabLayout.getTabAt(tabIndex);
+        if (tab == null) return;
+        if (show) {
+            BadgeDrawable badge = tab.getOrCreateBadge();
+            badge.clearNumber();
+            badge.setVisible(true);
+        } else {
+            tab.removeBadge();
+        }
+    }
+
+    /** Finds a notice's timestamp within an already-fetched snapshot — no extra read. */
+    private static Long getTimestampFromSnapshot(DataSnapshot snapshot, String noticeId) {
+        DataSnapshot direct = snapshot.child(noticeId);
+        if (direct.exists()) return direct.child("timestamp").getValue(Long.class);
+        for (DataSnapshot lvl1 : snapshot.getChildren()) {
+            for (DataSnapshot lvl2 : lvl1.getChildren()) {
+                for (DataSnapshot lvl3 : lvl2.getChildren()) {
+                    if (noticeId.equals(lvl3.getKey()))
+                        return lvl3.child("timestamp").getValue(Long.class);
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Extracts push-key notice IDs from a snapshot (flat or nested class tree). */
+    private static List<String> extractNoticeIds(DataSnapshot snapshot) {
+        List<String> ids = new ArrayList<>();
+        for (DataSnapshot child : snapshot.getChildren()) {
+            if (child.hasChild("timestamp")) {
+                String key = child.getKey();
+                if (key != null && key.startsWith("-")) ids.add(key);
+            } else {
+                for (DataSnapshot lvl2 : child.getChildren()) {
+                    for (DataSnapshot lvl3 : lvl2.getChildren()) {
+                        for (DataSnapshot notice : lvl3.getChildren()) {
+                            String key = notice.getKey();
+                            if (key != null && key.startsWith("-")) ids.add(key);
+                        }
+                    }
+                }
+            }
+        }
+        return ids;
+    }
+
+    private static String normalizeCourse(String course) {
+        if (course == null) return "_";
+        return course.trim().toLowerCase();
+    }
+
+    private static String normalizeYear(String year) {
+        if (year == null) return "_";
+        switch (year.trim()) {
+            case "1": return "1st_year";
+            case "2": return "2nd_year";
+            case "3": return "3rd_year";
+            default:  return sanitize(year);
+        }
     }
 
     // ── Util ──────────────────────────────────────────────────────────────

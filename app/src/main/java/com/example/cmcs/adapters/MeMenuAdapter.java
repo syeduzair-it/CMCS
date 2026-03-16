@@ -12,7 +12,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cmcs.R;
 import com.example.cmcs.models.MeMenuItem;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * RecyclerView adapter for the MeFragment menu list. Each row shows an icon, a
@@ -27,10 +29,23 @@ public class MeMenuAdapter extends RecyclerView.Adapter<MeMenuAdapter.MenuViewHo
 
     private final List<MeMenuItem> items;
     private final OnItemClickListener listener;
+    private final Set<String> badgeLabels = new HashSet<>();
 
     public MeMenuAdapter(List<MeMenuItem> items, OnItemClickListener listener) {
         this.items = items;
         this.listener = listener;
+    }
+
+    /** Show or hide the unread dot for the item with the given label. */
+    public void setBadge(String label, boolean show) {
+        if (show) badgeLabels.add(label);
+        else badgeLabels.remove(label);
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getLabel().equals(label)) {
+                notifyItemChanged(i);
+                break;
+            }
+        }
     }
 
     @NonNull
@@ -46,6 +61,8 @@ public class MeMenuAdapter extends RecyclerView.Adapter<MeMenuAdapter.MenuViewHo
         MeMenuItem item = items.get(position);
         holder.tvLabel.setText(item.getLabel());
         holder.ivIcon.setImageResource(item.getIconRes());
+        holder.badgeDot.setVisibility(
+                badgeLabels.contains(item.getLabel()) ? View.VISIBLE : View.GONE);
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(item);
@@ -62,11 +79,13 @@ public class MeMenuAdapter extends RecyclerView.Adapter<MeMenuAdapter.MenuViewHo
 
         final ImageView ivIcon;
         final TextView tvLabel;
+        final View badgeDot;
 
         MenuViewHolder(@NonNull View itemView) {
             super(itemView);
             ivIcon = itemView.findViewById(R.id.ivMenuIcon);
             tvLabel = itemView.findViewById(R.id.tvMenuLabel);
+            badgeDot = itemView.findViewById(R.id.viewBadgeDot);
         }
     }
 }

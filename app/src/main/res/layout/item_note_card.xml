@@ -58,9 +58,17 @@
 
             </LinearLayout>
 
+            <View
+                android:id="@+id/view_note_badge"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/badge_dot"
+                android:visibility="gone" />
+
         </LinearLayout>
 
-        <!-- Action row: View + Delete (owner only) -->
+        <!-- Action row: View + Delete (owner only) + Viewers (teacher only) -->
         <LinearLayout
             android:id="@+id/ll_note_actions"
             android:layout_width="match_parent"
@@ -73,11 +81,23 @@
                 android:layout_width="0dp"
                 android:layout_height="36dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="6dp"
+                android:layout_marginEnd="4dp"
                 android:backgroundTint="@color/colorPrimary"
                 android:text="View"
                 android:textColor="@color/white"
                 android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_viewers_note"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/cmcs_primary_dark"
+                android:text="Viewers"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_delete_note"

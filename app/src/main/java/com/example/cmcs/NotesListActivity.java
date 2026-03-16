@@ -27,7 +27,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * NotesListActivity
@@ -79,7 +81,7 @@ public class NotesListActivity extends AppCompatActivity {
                 ? NotesClassActivity.unsanitize(subject) : "Notes");
 
         rv.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NoteAdapter(notes, uid, new NoteAdapter.OnNoteAction() {
+        adapter = new NoteAdapter(notes, uid, role, new NoteAdapter.OnNoteAction() {
             @Override
             public void onView(NoteModel note) {
                 viewNote(note);
@@ -88,6 +90,11 @@ public class NotesListActivity extends AppCompatActivity {
             @Override
             public void onDelete(NoteModel note) {
                 confirmDelete(note);
+            }
+
+            @Override
+            public void onViewers(NoteModel note) {
+                openViewers(note);
             }
         });
         rv.setAdapter(adapter);
@@ -115,23 +122,24 @@ public class NotesListActivity extends AppCompatActivity {
                 loading.setVisibility(View.GONE);
                 notes.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
-                    // Skip the placeholder node created when subject was added
-                    if ("_created".equals(child.getKey())) {
-                        continue;
-                    }
+                    if ("_created".equals(child.getKey())) continue;
                     NoteModel note = child.getValue(NoteModel.class);
                     if (note != null) {
                         note.setNoteId(child.getKey());
                         notes.add(note);
                     }
                 }
-                // Sort DESC by timestamp
                 Collections.sort(notes,
                         (a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
                 adapter.notifyDataSetChanged();
                 boolean empty = notes.isEmpty();
                 tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
                 rv.setVisibility(empty ? View.GONE : View.VISIBLE);
+
+                // After notes load, compute unread set for students
+                if ("student".equals(role) && uid != null) {
+                    loadUnreadSet();
+                }
             }
 
             @Override
@@ -144,38 +152,96 @@ public class NotesListActivity extends AppCompatActivity {
         notesRef.addValueEventListener(listener);
     }
 
+    // ── Unread tracking ───────────────────────────────────────────────────
+
+    // Per-note view listeners so we react in real time when a note is marked read
+    private final List<DatabaseReference> viewRefs = new ArrayList<>();
+    private final List<ValueEventListener> viewListeners = new ArrayList<>();
+    // Local unread set — drives adapter dots
+    private final Set<String> unreadIds = new HashSet<>();
+
+    /**
+     * Attaches a real-time listener on noteViews/{noteId}/{uid} for each note.
+     * Starts unread, then clears the dot the moment the view entry appears.
+     * Only runs for students.
+     */
+    private void loadUnreadSet() {
+        // Detach any previous listeners (e.g. after notes list refreshes)
+        for (int i = 0; i < viewRefs.size(); i++) {
+            viewRefs.get(i).removeEventListener(viewListeners.get(i));
+        }
+        viewRefs.clear();
+        viewListeners.clear();
+        unreadIds.clear();
+
+        for (NoteModel note : notes) {
+            String noteId = note.getNoteId();
+            if (noteId == null) continue;
+            // Assume unread until Firebase says otherwise
+            unreadIds.add(noteId);
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("noteViews").child(noteId).child(uid);
+            ValueEventListener vl = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        // Viewed — remove from unread set and refresh that row
+                        unreadIds.remove(noteId);
+                        adapter.markRead(noteId);
+                    } else {
+                        // Not yet viewed — ensure it's in the unread set
+                        unreadIds.add(noteId);
+                        adapter.setUnreadNoteIds(new HashSet<>(unreadIds));
+                    }
+                }
+                @Override public void onCancelled(@NonNull DatabaseError e) {}
+            };
+            viewRefs.add(ref);
+            viewListeners.add(vl);
+            ref.addValueEventListener(vl);
+        }
+        // Push initial state to adapter
+        adapter.setUnreadNoteIds(new HashSet<>(unreadIds));
+    }
+
     private void viewNote(NoteModel note) {
         if (note.getFileUrl() == null || note.getFileUrl().isEmpty()) {
             Toast.makeText(this, "No file attached", Toast.LENGTH_SHORT).show();
             return;
         }
+        // Mark as viewed in Firebase (students only, write-once guard)
+        if ("student".equals(role) && uid != null && note.getNoteId() != null) {
+            DatabaseReference viewRef = FirebaseDatabase.getInstance()
+                    .getReference("noteViews")
+                    .child(note.getNoteId())
+                    .child(uid);
+            // Check before writing to avoid duplicate writes
+            viewRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (!snapshot.exists()) {
+                        viewRef.setValue(true);
+                    }
+                }
+                @Override public void onCancelled(@NonNull DatabaseError e) {}
+            });
+            // Update adapter immediately (optimistic) so dot disappears without waiting
+            adapter.markRead(note.getNoteId());
+        }
         try {
-            // Determine MIME type from the stored fileType field
             String mimeType;
             String fileType = note.getFileType();
-            if (fileType == null) {
-                fileType = "";
-            }
+            if (fileType == null) fileType = "";
             switch (fileType.toLowerCase()) {
-                case "pdf":
-                    mimeType = "application/pdf";
-                    break;
-                case "image":
-                    mimeType = "image/*";
-                    break;
-                case "video":
-                    mimeType = "video/*";
-                    break;
-                default:
-                    mimeType = "*/*";
-                    break;
+                case "pdf":   mimeType = "application/pdf"; break;
+                case "image": mimeType = "image/*"; break;
+                case "video": mimeType = "video/*"; break;
+                default:      mimeType = "*/*"; break;
             }
-
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(Uri.parse(note.getFileUrl()), mimeType);
+            intent.setDataAndType(android.net.Uri.parse(note.getFileUrl()), mimeType);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            // Show the system app chooser instead of defaulting to the browser
             startActivity(Intent.createChooser(intent, "Open with"));
         } catch (Exception e) {
             Toast.makeText(this, "Cannot open file: " + e.getMessage(),
@@ -203,6 +269,16 @@ public class NotesListActivity extends AppCompatActivity {
         // an API secret. DB record is removed above; Cloudinary URL is orphaned.
     }
 
+    private void openViewers(NoteModel note) {
+        Intent i = new Intent(this, NoteViewersActivity.class);
+        i.putExtra(NoteViewersActivity.EXTRA_NOTE_ID, note.getNoteId());
+        i.putExtra(NoteViewersActivity.EXTRA_NOTE_TITLE, note.getTitle());
+        i.putExtra(NoteViewersActivity.EXTRA_DEPT, dept);
+        i.putExtra(NoteViewersActivity.EXTRA_COURSE, course);
+        i.putExtra(NoteViewersActivity.EXTRA_YEAR, year);
+        startActivity(i);
+    }
+
     private void openAddNote() {
         Intent i = new Intent(this, AddNoteActivity.class);
         i.putExtra(NotesClassActivity.EXTRA_DEPT, dept);
@@ -219,5 +295,11 @@ public class NotesListActivity extends AppCompatActivity {
         if (listener != null) {
             notesRef.removeEventListener(listener);
         }
+        // Detach per-note view listeners
+        for (int i = 0; i < viewRefs.size(); i++) {
+            viewRefs.get(i).removeEventListener(viewListeners.get(i));
+        }
+        viewRefs.clear();
+        viewListeners.clear();
     }
 }

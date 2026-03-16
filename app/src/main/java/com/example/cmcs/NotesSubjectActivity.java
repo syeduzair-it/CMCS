@@ -25,7 +25,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * NotesSubjectActivity
@@ -48,6 +50,8 @@ public class NotesSubjectActivity extends AppCompatActivity {
 
     private final List<String> subjects = new ArrayList<>();
     private SubjectAdapter adapter;
+    // Cached subject→noteIds map so onResume can refresh badges without re-fetching
+    private final java.util.Map<String, List<String>> subjectNoteIdsCache = new java.util.LinkedHashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +96,16 @@ public class NotesSubjectActivity extends AppCompatActivity {
         loadSubjects();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh subject badges when returning from NotesListActivity
+        // (student may have viewed notes, so dots need to update)
+        if ("student".equals(role) && uid != null && !subjects.isEmpty()) {
+            refreshUnreadSubjects();
+        }
+    }
+
     private void loadSubjects() {
         loading.setVisibility(View.VISIBLE);
         subjectsRef.addValueEventListener(new ValueEventListener() {
@@ -99,14 +113,25 @@ public class NotesSubjectActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 loading.setVisibility(View.GONE);
                 subjects.clear();
+                subjectNoteIdsCache.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
-                    if (child.getKey() != null) {
-                        subjects.add(child.getKey());
+                    if (child.getKey() == null) continue;
+                    String subjectKey = child.getKey();
+                    subjects.add(subjectKey);
+                    List<String> ids = new ArrayList<>();
+                    for (DataSnapshot note : child.getChildren()) {
+                        String key = note.getKey();
+                        if (key != null && !key.equals("_created")) ids.add(key);
                     }
+                    subjectNoteIdsCache.put(subjectKey, ids);
                 }
                 adapter.notifyDataSetChanged();
                 tvEmpty.setVisibility(subjects.isEmpty() ? View.VISIBLE : View.GONE);
                 rv.setVisibility(subjects.isEmpty() ? View.GONE : View.VISIBLE);
+
+                if ("student".equals(role) && uid != null && !subjectNoteIdsCache.isEmpty()) {
+                    computeUnreadSubjects(subjectNoteIdsCache);
+                }
             }
 
             @Override
@@ -116,6 +141,62 @@ public class NotesSubjectActivity extends AppCompatActivity {
                         "Failed to load subjects", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /** Called on resume to re-check badges without re-fetching the subject list. */
+    private void refreshUnreadSubjects() {
+        if (!subjectNoteIdsCache.isEmpty()) {
+            computeUnreadSubjects(subjectNoteIdsCache);
+        }
+    }
+
+    /**
+     * For each subject, checks noteViews/{noteId}/{uid} per note (scoped reads).
+     * Marks a subject as unread if any of its notes have not been viewed.
+     */
+    private void computeUnreadSubjects(java.util.Map<String, List<String>> subjectNoteIds) {
+        // Flatten all noteIds and remember which subject each belongs to
+        List<String> allNoteIds = new ArrayList<>();
+        java.util.Map<String, String> noteToSubject = new java.util.HashMap<>();
+        for (java.util.Map.Entry<String, List<String>> entry : subjectNoteIds.entrySet()) {
+            for (String noteId : entry.getValue()) {
+                allNoteIds.add(noteId);
+                noteToSubject.put(noteId, entry.getKey());
+            }
+        }
+
+        if (allNoteIds.isEmpty()) {
+            adapter.setUnreadSubjects(new HashSet<>());
+            return;
+        }
+
+        // Track how many checks are pending
+        java.util.concurrent.atomic.AtomicInteger pending =
+                new java.util.concurrent.atomic.AtomicInteger(allNoteIds.size());
+        Set<String> unreadSubjects = java.util.Collections.synchronizedSet(new HashSet<>());
+
+        for (String noteId : allNoteIds) {
+            FirebaseDatabase.getInstance()
+                    .getReference("noteViews").child(noteId).child(uid)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (!snapshot.exists()) {
+                                String subj = noteToSubject.get(noteId);
+                                if (subj != null) unreadSubjects.add(subj);
+                            }
+                            if (pending.decrementAndGet() == 0) {
+                                adapter.setUnreadSubjects(unreadSubjects);
+                            }
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError e) {
+                            if (pending.decrementAndGet() == 0) {
+                                adapter.setUnreadSubjects(unreadSubjects);
+                            }
+                        }
+                    });
+        }
     }
 
     private void showAddSubjectDialog() {

@@ -89,6 +89,12 @@ public class MeFragment extends Fragment {
      * Prevents duplicate dividers if populateProfile() is ever called again.
      */
     private boolean menuDecoratorAdded = false;
+    private MeMenuAdapter menuAdapter;
+
+    // ── Notes badge (student only) ────────────────────────────────────────
+    private DatabaseReference notesBadgeRef;
+    private ValueEventListener notesBadgeListener;
+    private String cachedDept, cachedCourse, cachedYear;
 
     // ── Firebase ──────────────────────────────────────────────────────────
     private String authUid;
@@ -154,6 +160,10 @@ public class MeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        // Detach notes badge listener
+        if (notesBadgeRef != null && notesBadgeListener != null) {
+            notesBadgeRef.removeEventListener(notesBadgeListener);
+        }
         if (ivProfileImage != null) {
             Glide.with(this).clear(ivProfileImage);
         }
@@ -288,6 +298,11 @@ public class MeFragment extends Fragment {
             tvDepartmentOrYear.setText(
                     year != null && !year.isEmpty() ? "Year: " + year : "");
             setupMenu(buildStudentMenu());
+            // Cache for badge listener
+            cachedDept   = user.getDepartment();
+            cachedCourse = user.getCourse();
+            cachedYear   = user.getYear();
+            startNotesBadgeListener();
         }
 
         // Profile image
@@ -379,9 +394,9 @@ public class MeFragment extends Fragment {
     }
 
     private void setupMenu(List<MeMenuItem> items) {
-        MeMenuAdapter adapter = new MeMenuAdapter(items, this::handleMenuItemClick);
+        menuAdapter = new MeMenuAdapter(items, this::handleMenuItemClick);
         rvMenu.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvMenu.setAdapter(adapter);
+        rvMenu.setAdapter(menuAdapter);
         rvMenu.setNestedScrollingEnabled(false);
         // Fix #1 — Only add the divider decoration once; skip on subsequent calls
         if (!menuDecoratorAdded) {
@@ -389,6 +404,76 @@ public class MeFragment extends Fragment {
                     new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
             menuDecoratorAdded = true;
         }
+    }
+
+    // ── Notes badge (student only) ────────────────────────────────────────
+
+    /**
+     * Listens to notes/{dept}/{course}/{year} in real time.
+     * Shows a dot badge on the "Notes" menu item when any note is unread.
+     * Reads noteViews/{noteId}/{uid} per note (scoped) — no full-node scan.
+     */
+    private void startNotesBadgeListener() {
+        if (cachedDept == null || cachedCourse == null || cachedYear == null) return;
+        if (authUid == null) return;
+
+        notesBadgeRef = FirebaseDatabase.getInstance()
+                .getReference("notes")
+                .child(sanitize(cachedDept))
+                .child(sanitize(cachedCourse))
+                .child(sanitize(cachedYear));
+
+        notesBadgeListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<String> noteIds = new ArrayList<>();
+                for (DataSnapshot subject : snapshot.getChildren()) {
+                    for (DataSnapshot note : subject.getChildren()) {
+                        String key = note.getKey();
+                        if (key != null && !key.equals("_created")) noteIds.add(key);
+                    }
+                }
+                if (noteIds.isEmpty()) {
+                    setNotesBadge(false);
+                    return;
+                }
+                // Check each note's view entry individually (scoped reads)
+                java.util.concurrent.atomic.AtomicInteger pending =
+                        new java.util.concurrent.atomic.AtomicInteger(noteIds.size());
+                java.util.concurrent.atomic.AtomicBoolean hasUnread =
+                        new java.util.concurrent.atomic.AtomicBoolean(false);
+                for (String noteId : noteIds) {
+                    FirebaseDatabase.getInstance()
+                            .getReference("noteViews").child(noteId).child(authUid)
+                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot s) {
+                                    if (!s.exists()) hasUnread.set(true);
+                                    if (pending.decrementAndGet() == 0) setNotesBadge(hasUnread.get());
+                                }
+                                @Override public void onCancelled(@NonNull DatabaseError e) {
+                                    if (pending.decrementAndGet() == 0) setNotesBadge(hasUnread.get());
+                                }
+                            });
+                }
+            }
+            @Override public void onCancelled(@NonNull DatabaseError e) {
+                setNotesBadge(false);
+            }
+        };
+        notesBadgeRef.addValueEventListener(notesBadgeListener);
+    }
+
+    private void setNotesBadge(boolean show) {
+        if (!isAdded() || menuAdapter == null) return;
+        menuAdapter.setBadge("Notes", show);
+    }
+
+    private static String sanitize(String s) {
+        if (s == null) return "_";
+        return s.trim().replace(" ", "_").replace(".", "_")
+                .replace("#", "_").replace("$", "_")
+                .replace("[", "_").replace("]", "_");
     }
 
     private void handleMenuItemClick(MeMenuItem item) {

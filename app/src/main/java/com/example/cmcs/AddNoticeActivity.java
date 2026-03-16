@@ -368,12 +368,29 @@ public class AddNoticeActivity extends AppCompatActivity {
             case "class":
                 return "notices/class/"
                         + sanitize(dept) + "/"
-                        + sanitize(course) + "/"
-                        + sanitize(year);
+                        + normalizeCourse(course) + "/"
+                        + normalizeYear(year);
             case "training":
                 return "notices/training";
             default: // "college"
                 return "notices/college";
+        }
+    }
+
+    /** BCA → bca, BSC → bsc, etc. */
+    private static String normalizeCourse(String course) {
+        if (course == null) return "_";
+        return course.trim().toLowerCase();
+    }
+
+    /** "1" → "1st_year", "2" → "2nd_year", "3" → "3rd_year", else pass-through sanitized */
+    private static String normalizeYear(String year) {
+        if (year == null) return "_";
+        switch (year.trim()) {
+            case "1": return "1st_year";
+            case "2": return "2nd_year";
+            case "3": return "3rd_year";
+            default:  return sanitize(year); // already normalized (e.g. "1st_year")
         }
     }
 
