@@ -86,6 +86,10 @@ public class SelectUserActivity extends AppCompatActivity {
     // ── Data ──────────────────────────────────────────────────────────────
     public static final List<UserModel> cachedUsers = new ArrayList<>();
     private final List<String> classesList = new ArrayList<>();
+    
+    // ── Group creation ────────────────────────────────────────────────────
+    private boolean isGroupSelectionMode = false;
+    private final List<UserModel> selectedUsers = new ArrayList<>();
 
     // ─────────────────────────────────────────────────────────────────────
     // Lifecycle
@@ -124,6 +128,7 @@ public class SelectUserActivity extends AppCompatActivity {
         teachersRecyclerView.setAdapter(adapter);
 
         adapter.setOnUserClickListener(this::onUserSelected);
+        adapter.setOnUserCheckListener(this::onUserChecked);
 
         // 6. Search
         searchInput.addTextChangedListener(new TextWatcher() {
@@ -142,7 +147,15 @@ public class SelectUserActivity extends AppCompatActivity {
         });
 
         // 7. Group FAB
-        fabCreateGroup.setOnClickListener(v -> showCreateGroupDialog());
+        fabCreateGroup.setOnClickListener(v -> {
+            if (isGroupSelectionMode) {
+                // Confirm group creation
+                createGroupFromSelection();
+            } else {
+                // Enter group selection mode
+                enterGroupSelectionMode();
+            }
+        });
 
         // 8. Load my profile first, then query allowed users
         loadMyProfile();
@@ -478,89 +491,273 @@ public class SelectUserActivity extends AppCompatActivity {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Group chat creation (skeleton)
+    // Group chat creation
     // ─────────────────────────────────────────────────────────────────────────
-    private void showCreateGroupDialog() {
-        boolean isTeacher = "teacher".equalsIgnoreCase(myProfile.getRole());
-
-        // Build dialog with a single EditText for group name
+    
+    /**
+     * Enter group selection mode - show checkboxes and filter eligible users
+     */
+    private void enterGroupSelectionMode() {
+        isGroupSelectionMode = true;
+        selectedUsers.clear();
+        
+        // Update FAB icon
+        fabCreateGroup.setImageResource(R.drawable.ic_check);
+        
+        // Filter users to show only eligible students (same course, year, gender)
+        List<UserModel> eligibleUsers = getEligibleGroupMembers();
+        
+        if (eligibleUsers.isEmpty()) {
+            Toast.makeText(this, "No eligible students found for group creation", 
+                    Toast.LENGTH_SHORT).show();
+            exitGroupSelectionMode();
+            return;
+        }
+        
+        // Enable selection mode in adapter
+        adapter.setSelectionMode(true);
+        adapter.updateData(eligibleUsers);
+        
+        Toast.makeText(this, "Select at least 2 students to create a group", 
+                Toast.LENGTH_SHORT).show();
+    }
+    
+    /**
+     * Exit group selection mode
+     */
+    private void exitGroupSelectionMode() {
+        isGroupSelectionMode = false;
+        selectedUsers.clear();
+        
+        // Restore FAB icon
+        fabCreateGroup.setImageResource(R.drawable.ic_group_add);
+        
+        // Disable selection mode in adapter
+        adapter.setSelectionMode(false);
+        
+        // Restore original user list
+        filterAndDisplayUsers();
+    }
+    
+    /**
+     * Get eligible users for group creation (same course, year, gender)
+     */
+    private List<UserModel> getEligibleGroupMembers() {
+        List<UserModel> eligible = new ArrayList<>();
+        
+        for (UserModel u : cachedUsers) {
+            if (myUid.equals(u.getAuthUid())) {
+                continue; // Skip self
+            }
+            
+            // Only students with same course, year, and gender
+            if ("student".equalsIgnoreCase(normalize(u.getRole()))
+                    && normalize(u.getCourse()).equals(normalize(myProfile.getCourse()))
+                    && normalize(u.getYear()).equals(normalize(myProfile.getYear()))
+                    && normalize(u.getGender()).equals(normalize(myProfile.getGender()))) {
+                eligible.add(u);
+            }
+        }
+        
+        return eligible;
+    }
+    
+    /**
+     * Handle user checkbox toggle
+     */
+    private void onUserChecked(UserModel user, boolean isChecked) {
+        if (isChecked) {
+            if (!selectedUsers.contains(user)) {
+                selectedUsers.add(user);
+            }
+        } else {
+            selectedUsers.remove(user);
+        }
+        
+        // Update FAB text to show count
+        int totalMembers = selectedUsers.size() + 1; // +1 for current user
+        fabCreateGroup.setContentDescription("Create group with " + totalMembers + " members");
+    }
+    
+    /**
+     * Create group from selected users
+     */
+    private void createGroupFromSelection() {
+        // Validate minimum group size (current user + 2 others = 3 total)
+        if (selectedUsers.size() < 2) {
+            Toast.makeText(this, "Group must contain at least 3 members", 
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Show group name dialog
         EditText nameInput = new EditText(this);
         nameInput.setHint("Group name");
         nameInput.setSingleLine(true);
-
+        
         new AlertDialog.Builder(this)
                 .setTitle("Create Group")
-                .setMessage(isTeacher
-                        ? "Create a department group for " + myProfile.getDepartment()
-                        : "Create a class group (same course, year & gender)")
+                .setMessage("Enter a name for your group (" + (selectedUsers.size() + 1) + " members)")
                 .setView(nameInput)
                 .setPositiveButton("Create", (dialog, which) -> {
                     String groupName = nameInput.getText().toString().trim();
                     if (groupName.isEmpty()) {
-                        Toast.makeText(this, "Please enter a group name",
+                        Toast.makeText(this, "Please enter a group name", 
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    createGroupChat(groupName, isTeacher);
+                    createGroup(groupName);
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton("Cancel", (dialog, which) -> exitGroupSelectionMode())
+                .setOnCancelListener(dialog -> exitGroupSelectionMode())
                 .show();
     }
-
+    
     /**
-     * Group creation skeleton.
-     *
-     * Writes the group chat record. Member population (loading allowed users
-     * and adding their userChats entries) is left as a TODO for the full group
-     * implementation — the structure is correct.
-     *
-     * Max 50 participants enforced during member-add phase (TODO).
+     * Create group chat with selected members
      */
-    private void createGroupChat(String groupName, boolean isTeacher) {
+    private void createGroup(String groupName) {
+        // Build participant list (current user + selected users)
+        List<String> participantUids = new ArrayList<>();
+        participantUids.add(myUid);
+        for (UserModel user : selectedUsers) {
+            participantUids.add(user.getAuthUid());
+        }
+        
+        // Sort UIDs to create deterministic group ID
+        java.util.Collections.sort(participantUids);
+        String sortedParticipants = android.text.TextUtils.join("_", participantUids);
+        
+        // Check if group with same participants already exists
+        checkAndCreateGroup(groupName, participantUids, sortedParticipants);
+    }
+    
+    /**
+     * Check for duplicate group and create if not exists
+     */
+    private void checkAndCreateGroup(String groupName, List<String> participantUids, 
+                                      String sortedParticipants) {
+        chatsRef.orderByChild("type").equalTo("group")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        // Check each group for matching participants
+                        for (DataSnapshot groupSnapshot : snapshot.getChildren()) {
+                            DataSnapshot participantsSnapshot = groupSnapshot.child("participants");
+                            
+                            // Build sorted participant list from this group
+                            List<String> groupParticipants = new ArrayList<>();
+                            for (DataSnapshot p : participantsSnapshot.getChildren()) {
+                                groupParticipants.add(p.getKey());
+                            }
+                            java.util.Collections.sort(groupParticipants);
+                            String groupSortedParticipants = android.text.TextUtils.join("_", 
+                                    groupParticipants);
+                            
+                            // If participants match, open existing group
+                            if (groupSortedParticipants.equals(sortedParticipants)) {
+                                String existingGroupId = groupSnapshot.getKey();
+                                String existingGroupName = groupSnapshot.child("groupName")
+                                        .getValue(String.class);
+                                
+                                Toast.makeText(SelectUserActivity.this,
+                                        "Group \"" + existingGroupName + "\" already exists",
+                                        Toast.LENGTH_SHORT).show();
+                                
+                                openGroupChat(existingGroupId, existingGroupName);
+                                return;
+                            }
+                        }
+                        
+                        // No duplicate found, create new group
+                        createNewGroup(groupName, participantUids);
+                    }
+                    
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(SelectUserActivity.this,
+                                "Error checking groups: " + error.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    
+    /**
+     * Create new group in Firebase
+     */
+    private void createNewGroup(String groupName, List<String> participantUids) {
         String groupId = chatsRef.push().getKey();
         if (groupId == null) {
             Toast.makeText(this, "Failed to generate group ID", Toast.LENGTH_SHORT).show();
             return;
         }
-
+        
+        // Build participants map
         Map<String, Object> participants = new HashMap<>();
-        participants.put(myUid, true); // creator is first member
-
+        for (String uid : participantUids) {
+            participants.put(uid, true);
+        }
+        
+        // Build group data
         Map<String, Object> groupData = new HashMap<>();
         groupData.put("type", "group");
-        groupData.put("groupName", groupName);
+        groupData.put("name", groupName); // Changed from "groupName" to "name" to match ChatModel
         groupData.put("createdBy", myUid);
         groupData.put("participants", participants);
         groupData.put("lastMessage", "");
         groupData.put("lastTimestamp", ServerValue.TIMESTAMP);
-
-        // Add membership restriction metadata for future enforcement
-        if (!isTeacher) {
-            groupData.put("restrictDept", myProfile.getDepartment());
-            groupData.put("restrictCourse", myProfile.getCourse());
-            groupData.put("restrictYear", myProfile.getYear());
-            groupData.put("restrictGender", myProfile.getGender());
-        } else {
-            groupData.put("restrictDept", myProfile.getDepartment());
+        
+        // Build multi-path update
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("chats/" + groupId, groupData);
+        
+        // Add userChats entry for each participant
+        for (String uid : participantUids) {
+            updates.put("userChats/" + uid + "/" + groupId + "/visible", true);
+            updates.put("userChats/" + uid + "/" + groupId + "/unreadCount", 0);
         }
-
-        Map<String, Object> multiPathUpdate = new HashMap<>();
-        multiPathUpdate.put("chats/" + groupId, groupData);
-        multiPathUpdate.put("userChats/" + myUid + "/" + groupId + "/visible", true);
-
+        
+        // Execute update
         FirebaseDatabase.getInstance().getReference()
-                .updateChildren(multiPathUpdate)
+                .updateChildren(updates)
                 .addOnSuccessListener(unused -> {
-                    Toast.makeText(this,
-                            "Group \"" + groupName + "\" created! Add members next.",
-                            Toast.LENGTH_LONG).show();
-                    // TODO: startActivity(new Intent(this, GroupMembersActivity.class)
-                    //           .putExtra("groupId", groupId));
-                    finish();
+                    Toast.makeText(this, "Group \"" + groupName + "\" created!", 
+                            Toast.LENGTH_SHORT).show();
+                    openGroupChat(groupId, groupName);
                 })
-                .addOnFailureListener(e -> Toast.makeText(this,
-                "Failed to create group: " + e.getMessage(),
-                Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to create group: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                    exitGroupSelectionMode();
+                });
+    }
+    
+    /**
+     * Open group chat activity
+     */
+    private void openGroupChat(String groupId, String groupName) {
+        Intent intent = new Intent(this, ChatActivity.class);
+        intent.putExtra(ChatActivity.EXTRA_CHAT_ID, groupId);
+        intent.putExtra(ChatActivity.EXTRA_OTHER_NAME, groupName);
+        intent.putExtra(ChatActivity.EXTRA_OTHER_UID, groupId); // Use groupId as placeholder
+        intent.putExtra("isGroup", true);
+        startActivity(intent);
+        finish();
+    }
+    
+    /**
+     * Old group creation dialog - kept for reference, will be removed
+     */
+    private void showCreateGroupDialog() {
+        // This method is replaced by enterGroupSelectionMode()
+        enterGroupSelectionMode();
+    }
+
+    /**
+     * Group creation skeleton - replaced by new implementation
+     */
+    private void createGroupChat(String groupName, boolean isTeacher) {
+        // This method is replaced by createGroup()
     }
 
 }

@@ -66,8 +66,18 @@
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/user_name"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/user_checkbox"
         app:layout_constraintTop_toTopOf="@id/user_name" />
+    
+    <!-- Checkbox for group selection -->
+    <CheckBox
+        android:id="@+id/user_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Subtitle: dept / course / year -->
     <TextView

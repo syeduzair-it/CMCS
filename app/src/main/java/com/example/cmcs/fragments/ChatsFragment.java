@@ -178,9 +178,20 @@ public class ChatsFragment extends Fragment {
         adapter.setOnChatClickListener(chat -> {
             Intent intent = new Intent(requireContext(), com.example.cmcs.ChatActivity.class);
             intent.putExtra("chatId", chat.getChatId());
-            intent.putExtra("otherUid", chat.getOtherUserId());
-            intent.putExtra("otherName", chat.getOtherUserName());
-            intent.putExtra("otherAvatar", chat.getOtherUserProfileImage());
+            
+            boolean isGroup = "group".equals(chat.getType());
+            if (isGroup) {
+                // For group chats
+                intent.putExtra("otherUid", chat.getChatId()); // Use chatId as placeholder
+                intent.putExtra("otherName", chat.getName()); // Use group name
+                intent.putExtra("isGroup", true);
+            } else {
+                // For private chats
+                intent.putExtra("otherUid", chat.getOtherUserId());
+                intent.putExtra("otherName", chat.getOtherUserName());
+                intent.putExtra("otherAvatar", chat.getOtherUserProfileImage());
+            }
+            
             intent.putExtra("fromChatList", true);
             startActivity(intent);
         });

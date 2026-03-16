@@ -71,6 +71,12 @@
         <item name="rippleColor">@color/cmcs_background</item>
     </style>
 
+    <!-- ── Rounded corners for ImageView via shapeAppearanceOverlay ─── -->
+    <style name="RoundedImageStyle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
     <!-- ── Section Header Text ───────────────────────────────────────── -->
     <style name="CMCS.SectionHeader">
         <item name="android:textSize">16sp</item>

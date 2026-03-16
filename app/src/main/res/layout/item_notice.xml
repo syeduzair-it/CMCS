@@ -7,8 +7,8 @@
     android:layout_marginHorizontal="@dimen/_12sdp"
     android:layout_marginVertical="@dimen/_6sdp"
     app:cardBackgroundColor="@color/cmcs_card"
-    app:cardCornerRadius="@dimen/_12sdp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
     app:strokeColor="@color/cmcs_divider"
     app:strokeWidth="1dp">
 
@@ -16,9 +16,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/_14sdp">
+        android:padding="16dp">
 
-        <!-- Header Row: creator + timestamp -->
+        <!-- Header Row: creator name (left) + timestamp (right) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,7 +31,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textColor="@color/cmcs_primary_dark"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -47,54 +47,58 @@
             android:id="@+id/tvEdited"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:text="(edited)"
             android:textColor="@color/textSecondary"
             android:textSize="10sp"
             android:visibility="gone" />
 
-        <!-- Notice Title -->
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_8sdp"
-            android:textColor="@color/textPrimary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <!-- Notice Description -->
-        <TextView
-            android:id="@+id/tvDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_4sdp"
-            android:ellipsize="end"
-            android:maxLines="3"
-            android:textColor="@color/textSecondary"
-            android:textSize="13sp"
-            android:lineSpacingMultiplier="1.3" />
-
-        <!-- Media Preview Area -->
+        <!-- Media Preview (below header, above title) -->
         <FrameLayout
             android:id="@+id/mediaPreviewContainer"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_160sdp"
-            android:layout_marginTop="@dimen/_10sdp"
-            android:background="@color/surfaceElevated"
+            android:layout_height="220dp"
+            android:layout_marginTop="12dp"
             android:visibility="gone">
 
+            <!-- Image preview -->
             <ImageView
                 android:id="@+id/ivImagePreview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="fitCenter"
-                android:visibility="gone" />
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/RoundedImageStyle" />
 
+            <!-- Video preview (thumbnail + play overlay) -->
+            <FrameLayout
+                android:id="@+id/videoPreviewContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/ivVideoThumbnail"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/RoundedImageStyle" />
+
+                <ImageView
+                    android:id="@+id/ivPlayOverlay"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_play_circle"
+                    android:alpha="0.9" />
+            </FrameLayout>
+
+            <!-- PDF preview (icon + filename) -->
             <LinearLayout
-                android:id="@+id/nonImagePreview"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:id="@+id/pdfPreviewContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/surfaceElevated"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:visibility="gone">
@@ -109,66 +113,96 @@
                     android:id="@+id/tvMediaLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
+                    android:layout_marginTop="8dp"
                     android:textColor="@color/textSecondary"
                     android:textSize="12sp" />
             </LinearLayout>
         </FrameLayout>
 
+        <!-- Notice Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/textPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Notice Description — full, no truncation, clickable links -->
+        <TextView
+            android:id="@+id/tvDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:autoLink="web"
+            android:linksClickable="true"
+            android:lineSpacingMultiplier="1.4"
+            android:textColor="@color/textSecondary"
+            android:textSize="14sp" />
+
         <!-- Divider -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="@dimen/_10sdp"
+            android:layout_marginTop="12dp"
             android:background="@color/dividerColor" />
 
-        <!-- View Count Row: teachers only -->
+        <!-- Footer Row: view count (left) + delete button (right) -->
         <LinearLayout
-            android:id="@+id/llViewRow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_6sdp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="4dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/tvViewCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="\uD83D\uDC41 0 views"
-                android:textColor="@color/textSecondary"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <!-- Action Row: Edit + Delete (owner only) -->
-        <LinearLayout
-            android:id="@+id/actionRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_6sdp"
-            android:gravity="end"
-            android:orientation="horizontal"
-            android:visibility="gone">
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <ImageButton
-                android:id="@+id/btnEdit"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+            <!-- View count — teacher only -->
+            <LinearLayout
+                android:id="@+id/llViewRow"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Edit notice"
-                android:src="@drawable/ic_edit" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="4dp"
+                android:visibility="gone">
 
-            <ImageButton
-                android:id="@+id/btnDelete"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginStart="@dimen/_8sdp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Delete notice"
-                android:src="@drawable/ic_delete" />
+                <TextView
+                    android:id="@+id/tvViewCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\uD83D\uDC41 0 views"
+                    android:textColor="@color/textSecondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Edit + Delete — owner teacher only -->
+            <LinearLayout
+                android:id="@+id/actionRow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ImageButton
+                    android:id="@+id/btnEdit"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Edit notice"
+                    android:src="@drawable/ic_edit" />
+
+                <ImageButton
+                    android:id="@+id/btnDelete"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Delete notice"
+                    android:src="@drawable/ic_delete" />
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

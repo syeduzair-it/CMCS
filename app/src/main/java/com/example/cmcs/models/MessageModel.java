@@ -11,10 +11,11 @@ import java.util.Map;
  *
  * {
  * senderId: "uid" 
- * messageType: "text" | "image" | "video" | "file"
+ * messageType: "text" | "image" | "video" | "file" | "audio"
  * message: "text" (for text messages)
  * mediaUrl: "cloudinary url" (for media messages)
  * fileName: "document.pdf" (for file messages)
+ * audioDuration: 45 (for audio messages, in seconds)
  * timestamp: 1234567890 
  * deliveredTo: { uid: true } 
  * readBy: { uid: true }
@@ -34,13 +35,15 @@ public class MessageModel {
     public static final String TYPE_IMAGE = "image";
     public static final String TYPE_VIDEO = "video";
     public static final String TYPE_FILE = "file";
+    public static final String TYPE_AUDIO = "audio";
 
     // ── Firebase fields ────────────────────────────────────────────────────
     private String senderId;
     private String messageType = TYPE_TEXT; // default to text for backward compatibility
     private String message; // text content (for text messages)
-    private String mediaUrl; // Cloudinary URL (for image/video/file)
+    private String mediaUrl; // Cloudinary URL (for image/video/file/audio)
     private String fileName; // Original file name (for file messages)
+    private int audioDuration; // Duration in seconds (for audio messages)
     private long timestamp;
     private Map<String, Boolean> deliveredTo = new HashMap<>();
     private Map<String, Boolean> readBy = new HashMap<>();
@@ -106,6 +109,14 @@ public class MessageModel {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public int getAudioDuration() {
+        return audioDuration;
+    }
+
+    public void setAudioDuration(int audioDuration) {
+        this.audioDuration = audioDuration;
     }
 
     public long getTimestamp() {

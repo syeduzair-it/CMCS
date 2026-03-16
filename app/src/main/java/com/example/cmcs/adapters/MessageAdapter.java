@@ -50,6 +50,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int VIEW_TYPE_VIDEO_RECEIVED = 6;
     private static final int VIEW_TYPE_FILE_SENT = 7;
     private static final int VIEW_TYPE_FILE_RECEIVED = 8;
+    private static final int VIEW_TYPE_AUDIO_SENT = 9;
+    private static final int VIEW_TYPE_AUDIO_RECEIVED = 10;
 
     private static final SimpleDateFormat TIME_FMT
             = new SimpleDateFormat("hh:mm a", Locale.getDefault());
@@ -126,6 +128,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return isSent ? VIEW_TYPE_VIDEO_SENT : VIEW_TYPE_VIDEO_RECEIVED;
         } else if (MessageModel.TYPE_FILE.equals(messageType)) {
             return isSent ? VIEW_TYPE_FILE_SENT : VIEW_TYPE_FILE_RECEIVED;
+        } else if (MessageModel.TYPE_AUDIO.equals(messageType)) {
+            return isSent ? VIEW_TYPE_AUDIO_SENT : VIEW_TYPE_AUDIO_RECEIVED;
         } else {
             return isSent ? VIEW_TYPE_TEXT_SENT : VIEW_TYPE_TEXT_RECEIVED;
         }
@@ -162,6 +166,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             case VIEW_TYPE_FILE_RECEIVED:
                 v = inflater.inflate(R.layout.item_message_file_received, parent, false);
                 return new FileReceivedViewHolder(v);
+            case VIEW_TYPE_AUDIO_SENT:
+                v = inflater.inflate(R.layout.item_message_audio_sent, parent, false);
+                return new AudioSentViewHolder(v);
+            case VIEW_TYPE_AUDIO_RECEIVED:
+                v = inflater.inflate(R.layout.item_message_audio_received, parent, false);
+                return new AudioReceivedViewHolder(v);
             default:
                 v = inflater.inflate(R.layout.item_message_sent, parent, false);
                 return new TextSentViewHolder(v);
@@ -195,6 +205,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((FileSentViewHolder) holder).bind(msg, otherUid);
         } else if (holder instanceof FileReceivedViewHolder) {
             ((FileReceivedViewHolder) holder).bind(msg);
+        } else if (holder instanceof AudioSentViewHolder) {
+            ((AudioSentViewHolder) holder).bind(msg, otherUid);
+        } else if (holder instanceof AudioReceivedViewHolder) {
+            ((AudioReceivedViewHolder) holder).bind(msg);
         }
     }
 
@@ -606,6 +620,293 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     Toast.makeText(ctx, "Cannot open file", Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ViewHolders - Audio Messages
+    // ─────────────────────────────────────────────────────────────────────────
+    public static class AudioSentViewHolder extends RecyclerView.ViewHolder {
+        private final ImageView btnPlayPause;
+        private final android.widget.SeekBar seekbarAudio;
+        private final TextView tvAudioDuration;
+        private final TextView tvTimestamp;
+        private final View viewStatusDot;
+        
+        private android.media.MediaPlayer mediaPlayer;
+        private boolean isPlaying = false;
+        private android.os.Handler handler = new android.os.Handler();
+
+        public AudioSentViewHolder(@NonNull View itemView) {
+            super(itemView);
+            btnPlayPause = itemView.findViewById(R.id.btn_play_pause);
+            seekbarAudio = itemView.findViewById(R.id.seekbar_audio);
+            tvAudioDuration = itemView.findViewById(R.id.tv_audio_duration);
+            tvTimestamp = itemView.findViewById(R.id.tv_timestamp);
+            viewStatusDot = itemView.findViewById(R.id.view_status_dot);
+        }
+
+        public void bind(MessageModel msg, String otherUid) {
+            Context ctx = itemView.getContext();
+            
+            // Set duration
+            int duration = msg.getAudioDuration();
+            tvAudioDuration.setText(formatDuration(duration));
+            tvTimestamp.setText(formatTime(msg.getTimestamp()));
+            
+            // Reset state
+            isPlaying = false;
+            btnPlayPause.setImageResource(R.drawable.ic_play);
+            seekbarAudio.setProgress(0);
+            
+            // Release previous player
+            releasePlayer();
+            
+            // Play/Pause button
+            btnPlayPause.setOnClickListener(v -> {
+                if (isPlaying) {
+                    pauseAudio();
+                } else {
+                    playAudio(msg.getMediaUrl(), ctx);
+                }
+            });
+            
+            // Seekbar
+            seekbarAudio.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+                    if (fromUser && mediaPlayer != null) {
+                        int newPosition = (int) ((progress / 100.0) * mediaPlayer.getDuration());
+                        mediaPlayer.seekTo(newPosition);
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(android.widget.SeekBar seekBar) {}
+
+                @Override
+                public void onStopTrackingTouch(android.widget.SeekBar seekBar) {}
+            });
+            
+            // Status dot
+            int colorRes;
+            switch (msg.getStatusFor(otherUid)) {
+                case MessageModel.STATUS_READ:
+                    colorRes = R.color.statusRead;
+                    break;
+                case MessageModel.STATUS_DELIVERED:
+                    colorRes = R.color.statusDelivered;
+                    break;
+                default:
+                    colorRes = android.R.color.white;
+                    break;
+            }
+            viewStatusDot.setBackgroundTintList(
+                    ColorStateList.valueOf(ContextCompat.getColor(ctx, colorRes)));
+        }
+        
+        private void playAudio(String url, Context ctx) {
+            try {
+                if (mediaPlayer == null) {
+                    mediaPlayer = new android.media.MediaPlayer();
+                    mediaPlayer.setDataSource(url);
+                    mediaPlayer.setAudioAttributes(
+                            new android.media.AudioAttributes.Builder()
+                                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                                    .build()
+                    );
+                    mediaPlayer.prepareAsync();
+                    mediaPlayer.setOnPreparedListener(mp -> {
+                        mp.start();
+                        isPlaying = true;
+                        btnPlayPause.setImageResource(R.drawable.ic_pause);
+                        updateSeekbar();
+                    });
+                    mediaPlayer.setOnCompletionListener(mp -> {
+                        isPlaying = false;
+                        btnPlayPause.setImageResource(R.drawable.ic_play);
+                        seekbarAudio.setProgress(0);
+                    });
+                } else {
+                    mediaPlayer.start();
+                    isPlaying = true;
+                    btnPlayPause.setImageResource(R.drawable.ic_pause);
+                    updateSeekbar();
+                }
+            } catch (Exception e) {
+                Toast.makeText(ctx, "Cannot play audio", Toast.LENGTH_SHORT).show();
+            }
+        }
+        
+        private void pauseAudio() {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                isPlaying = false;
+                btnPlayPause.setImageResource(R.drawable.ic_play);
+            }
+        }
+        
+        private void releasePlayer() {
+            if (mediaPlayer != null) {
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
+            handler.removeCallbacksAndMessages(null);
+        }
+        
+        private void updateSeekbar() {
+            if (mediaPlayer != null && isPlaying) {
+                int currentPosition = mediaPlayer.getCurrentPosition();
+                int duration = mediaPlayer.getDuration();
+                int progress = (int) ((currentPosition / (float) duration) * 100);
+                seekbarAudio.setProgress(progress);
+                
+                // Update duration text
+                int remaining = (duration - currentPosition) / 1000;
+                tvAudioDuration.setText(formatDuration(remaining));
+                
+                handler.postDelayed(this::updateSeekbar, 100);
+            }
+        }
+        
+        private String formatDuration(int seconds) {
+            int mins = seconds / 60;
+            int secs = seconds % 60;
+            return String.format(java.util.Locale.getDefault(), "%d:%02d", mins, secs);
+        }
+    }
+
+    public static class AudioReceivedViewHolder extends RecyclerView.ViewHolder {
+        private final ImageView btnPlayPause;
+        private final android.widget.SeekBar seekbarAudio;
+        private final TextView tvAudioDuration;
+        private final TextView tvTimestamp;
+        
+        private android.media.MediaPlayer mediaPlayer;
+        private boolean isPlaying = false;
+        private android.os.Handler handler = new android.os.Handler();
+
+        public AudioReceivedViewHolder(@NonNull View itemView) {
+            super(itemView);
+            btnPlayPause = itemView.findViewById(R.id.btn_play_pause);
+            seekbarAudio = itemView.findViewById(R.id.seekbar_audio);
+            tvAudioDuration = itemView.findViewById(R.id.tv_audio_duration);
+            tvTimestamp = itemView.findViewById(R.id.tv_timestamp);
+        }
+
+        public void bind(MessageModel msg) {
+            Context ctx = itemView.getContext();
+            
+            // Set duration
+            int duration = msg.getAudioDuration();
+            tvAudioDuration.setText(formatDuration(duration));
+            tvTimestamp.setText(formatTime(msg.getTimestamp()));
+            
+            // Reset state
+            isPlaying = false;
+            btnPlayPause.setImageResource(R.drawable.ic_play);
+            seekbarAudio.setProgress(0);
+            
+            // Release previous player
+            releasePlayer();
+            
+            // Play/Pause button
+            btnPlayPause.setOnClickListener(v -> {
+                if (isPlaying) {
+                    pauseAudio();
+                } else {
+                    playAudio(msg.getMediaUrl(), ctx);
+                }
+            });
+            
+            // Seekbar
+            seekbarAudio.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+                    if (fromUser && mediaPlayer != null) {
+                        int newPosition = (int) ((progress / 100.0) * mediaPlayer.getDuration());
+                        mediaPlayer.seekTo(newPosition);
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(android.widget.SeekBar seekBar) {}
+
+                @Override
+                public void onStopTrackingTouch(android.widget.SeekBar seekBar) {}
+            });
+        }
+        
+        private void playAudio(String url, Context ctx) {
+            try {
+                if (mediaPlayer == null) {
+                    mediaPlayer = new android.media.MediaPlayer();
+                    mediaPlayer.setDataSource(url);
+                    mediaPlayer.setAudioAttributes(
+                            new android.media.AudioAttributes.Builder()
+                                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                                    .build()
+                    );
+                    mediaPlayer.prepareAsync();
+                    mediaPlayer.setOnPreparedListener(mp -> {
+                        mp.start();
+                        isPlaying = true;
+                        btnPlayPause.setImageResource(R.drawable.ic_pause);
+                        updateSeekbar();
+                    });
+                    mediaPlayer.setOnCompletionListener(mp -> {
+                        isPlaying = false;
+                        btnPlayPause.setImageResource(R.drawable.ic_play);
+                        seekbarAudio.setProgress(0);
+                    });
+                } else {
+                    mediaPlayer.start();
+                    isPlaying = true;
+                    btnPlayPause.setImageResource(R.drawable.ic_pause);
+                    updateSeekbar();
+                }
+            } catch (Exception e) {
+                Toast.makeText(ctx, "Cannot play audio", Toast.LENGTH_SHORT).show();
+            }
+        }
+        
+        private void pauseAudio() {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                isPlaying = false;
+                btnPlayPause.setImageResource(R.drawable.ic_play);
+            }
+        }
+        
+        private void releasePlayer() {
+            if (mediaPlayer != null) {
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
+            handler.removeCallbacksAndMessages(null);
+        }
+        
+        private void updateSeekbar() {
+            if (mediaPlayer != null && isPlaying) {
+                int currentPosition = mediaPlayer.getCurrentPosition();
+                int duration = mediaPlayer.getDuration();
+                int progress = (int) ((currentPosition / (float) duration) * 100);
+                seekbarAudio.setProgress(progress);
+                
+                // Update duration text
+                int remaining = (duration - currentPosition) / 1000;
+                tvAudioDuration.setText(formatDuration(remaining));
+                
+                handler.postDelayed(this::updateSeekbar, 100);
+            }
+        }
+        
+        private String formatDuration(int seconds) {
+            int mins = seconds / 60;
+            int secs = seconds % 60;
+            return String.format(java.util.Locale.getDefault(), "%d:%02d", mins, secs);
         }
     }
 

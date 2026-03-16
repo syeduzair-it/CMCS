@@ -2,12 +2,14 @@ package com.example.cmcs.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -86,6 +88,9 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
         h.tvCreatorName.setText(n.getCreatedByName() != null ? n.getCreatedByName() : "");
         h.tvTitle.setText(n.getTitle());
         h.tvDescription.setText(n.getDescription());
+        Linkify.addLinks(h.tvDescription, Linkify.WEB_URLS);
+        h.tvDescription.setLinksClickable(true);
+        h.tvDescription.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
         h.tvEdited.setVisibility(n.isEdited() ? View.VISIBLE : View.GONE);
         h.tvTimestamp.setText(formatTimestamp(n.getTimestamp()));
 
@@ -224,44 +229,52 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
             return;
         }
         h.mediaPreviewContainer.setVisibility(View.VISIBLE);
+
+        // Reset all sub-containers
+        h.ivImagePreview.setVisibility(View.GONE);
+        h.videoPreviewContainer.setVisibility(View.GONE);
+        h.pdfPreviewContainer.setVisibility(View.GONE);
+
         if (type.equals("image")) {
             h.ivImagePreview.setVisibility(View.VISIBLE);
-            h.nonImagePreview.setVisibility(View.GONE);
             Glide.with(context).load(n.getMediaUrl())
-                    .fitCenter()
+                    .centerCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(R.color.surfaceElevated)
                     .into(h.ivImagePreview);
-            // Tap → full-screen viewer with download + share
             h.ivImagePreview.setOnClickListener(v -> {
                 Intent i = new Intent(context, NoticeMediaViewerActivity.class);
                 i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_URL, n.getMediaUrl());
                 i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_TYPE, "image");
                 context.startActivity(i);
             });
-        } else {
-            h.ivImagePreview.setVisibility(View.GONE);
-            h.nonImagePreview.setVisibility(View.VISIBLE);
-            if (type.equals("pdf")) {
-                h.ivMediaIcon.setImageResource(R.drawable.ic_pdf);
-                h.tvMediaLabel.setText("PDF Document — tap to open");
-                // PDF → full-screen viewer with download + share
-                h.nonImagePreview.setOnClickListener(v -> {
-                    Intent i = new Intent(context, NoticeMediaViewerActivity.class);
-                    i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_URL, n.getMediaUrl());
-                    i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_TYPE, "pdf");
-                    context.startActivity(i);
-                });
-            } else {
-                // Video → in-app ExoPlayer
-                h.ivMediaIcon.setImageResource(R.drawable.ic_video);
-                h.tvMediaLabel.setText("Video — tap to play");
-                h.nonImagePreview.setOnClickListener(v -> {
-                    Intent i = new Intent(context, NoticeVideoViewerActivity.class);
-                    i.putExtra(NoticeVideoViewerActivity.EXTRA_VIDEO_URL, n.getMediaUrl());
-                    context.startActivity(i);
-                });
-            }
+        } else if (type.equals("video")) {
+            h.videoPreviewContainer.setVisibility(View.VISIBLE);
+            // Load video thumbnail via Glide
+            Glide.with(context).load(n.getMediaUrl())
+                    .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .placeholder(R.color.surfaceElevated)
+                    .into(h.ivVideoThumbnail);
+            h.videoPreviewContainer.setOnClickListener(v -> {
+                Intent i = new Intent(context, NoticeVideoViewerActivity.class);
+                i.putExtra(NoticeVideoViewerActivity.EXTRA_VIDEO_URL, n.getMediaUrl());
+                context.startActivity(i);
+            });
+        } else if (type.equals("pdf")) {
+            h.pdfPreviewContainer.setVisibility(View.VISIBLE);
+            h.ivMediaIcon.setImageResource(R.drawable.ic_pdf);
+            // Show filename if available, else generic label
+            String label = (n.getMediaUrl() != null && n.getMediaUrl().contains("/"))
+                    ? n.getMediaUrl().substring(n.getMediaUrl().lastIndexOf('/') + 1)
+                    : "PDF Document";
+            h.tvMediaLabel.setText(label);
+            h.pdfPreviewContainer.setOnClickListener(v -> {
+                Intent i = new Intent(context, NoticeMediaViewerActivity.class);
+                i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_URL, n.getMediaUrl());
+                i.putExtra(NoticeMediaViewerActivity.EXTRA_MEDIA_TYPE, "pdf");
+                context.startActivity(i);
+            });
         }
     }
 
@@ -312,8 +325,9 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
 
         TextView     tvCreatorName, tvTimestamp, tvTitle, tvDescription, tvEdited, tvMediaLabel;
         TextView     tvViewCount;
-        ImageView    ivImagePreview, ivMediaIcon;
-        LinearLayout nonImagePreview, actionRow, llViewRow;
+        ImageView    ivImagePreview, ivMediaIcon, ivVideoThumbnail;
+        FrameLayout  videoPreviewContainer;
+        LinearLayout pdfPreviewContainer, actionRow, llViewRow;
         View         mediaPreviewContainer;
         ImageButton  btnEdit, btnDelete;
 
@@ -326,7 +340,9 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
             tvEdited              = v.findViewById(R.id.tvEdited);
             mediaPreviewContainer = v.findViewById(R.id.mediaPreviewContainer);
             ivImagePreview        = v.findViewById(R.id.ivImagePreview);
-            nonImagePreview       = v.findViewById(R.id.nonImagePreview);
+            videoPreviewContainer = v.findViewById(R.id.videoPreviewContainer);
+            ivVideoThumbnail      = v.findViewById(R.id.ivVideoThumbnail);
+            pdfPreviewContainer   = v.findViewById(R.id.pdfPreviewContainer);
             ivMediaIcon           = v.findViewById(R.id.ivMediaIcon);
             tvMediaLabel          = v.findViewById(R.id.tvMediaLabel);
             actionRow             = v.findViewById(R.id.actionRow);

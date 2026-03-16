@@ -94,6 +94,13 @@ public class ChatActivity extends AppCompatActivity {
     private ActivityResultLauncher<String> documentPickerLauncher;
     private ActivityResultLauncher<String> filePickerLauncher;
 
+    // ── Audio recording ──────────────────────────────────────────────────────
+    private android.media.MediaRecorder mediaRecorder;
+    private String audioFilePath;
+    private boolean isRecording = false;
+    private long recordingStartTime;
+    private ActivityResultLauncher<String> audioPermissionLauncher;
+
     // ── Reply Logic ──────────────────────────────────────────────
     private View layoutReplyPreview;
     private TextView tvReplyPreviewText;
@@ -180,6 +187,9 @@ public class ChatActivity extends AppCompatActivity {
 
         // Initialize file pickers
         initializeFilePickers();
+        
+        // Initialize audio permission launcher
+        initializeAudioPermission();
 
         // 1. Auth check
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -194,11 +204,18 @@ public class ChatActivity extends AppCompatActivity {
         otherUid = getIntent().getStringExtra(EXTRA_OTHER_UID);
         String otherName = getIntent().getStringExtra(EXTRA_OTHER_NAME);
         String otherAvatar = getIntent().getStringExtra(EXTRA_OTHER_AVATAR);
+        boolean isGroup = getIntent().getBooleanExtra("isGroup", false);
 
-        if (chatId == null || otherUid == null) {
+        // Validate parameters - for groups, otherUid is not required
+        if (chatId == null || (!isGroup && otherUid == null)) {
             Toast.makeText(this, "Invalid chat parameters", Toast.LENGTH_SHORT).show();
             finish();
             return;
+        }
+        
+        // For group chats, use chatId as otherUid placeholder for adapter
+        if (isGroup && otherUid == null) {
+            otherUid = chatId;
         }
 
         // 3. Firebase references
@@ -274,9 +291,13 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         // 7.2 Send voice message
-        sendVoice.setOnClickListener(v
-                -> Toast.makeText(this, "Voice message feature coming soon", Toast.LENGTH_SHORT).show()
-        );
+        sendVoice.setOnClickListener(v -> {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                checkAudioPermissionAndRecord();
+            }
+        });
         // 8. Emoji / Attach placeholders
         findViewById(R.id.btn_emoji).setOnClickListener(v
                 -> Toast.makeText(this, "Emoji picker coming soon", Toast.LENGTH_SHORT).show());
@@ -899,5 +920,209 @@ public class ChatActivity extends AppCompatActivity {
             fileName = uri.getLastPathSegment();
         }
         return fileName;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Audio Recording System
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    /**
+     * Initialize audio permission launcher
+     */
+    private void initializeAudioPermission() {
+        audioPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        startRecording();
+                    } else {
+                        Toast.makeText(this, "Microphone permission required", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    /**
+     * Check audio permission and start recording
+     */
+    private void checkAudioPermissionAndRecord() {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            startRecording();
+        } else {
+            audioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO);
+        }
+    }
+
+    /**
+     * Start audio recording
+     */
+    private void startRecording() {
+        try {
+            // Create audio directory
+            java.io.File audioDir = new java.io.File(getCacheDir(), "audio_messages");
+            if (!audioDir.exists()) {
+                audioDir.mkdirs();
+            }
+
+            // Create audio file
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            java.io.File audioFile = new java.io.File(audioDir, "voice_" + timestamp + ".m4a");
+            audioFilePath = audioFile.getAbsolutePath();
+
+            // Initialize MediaRecorder
+            mediaRecorder = new android.media.MediaRecorder();
+            mediaRecorder.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
+            mediaRecorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4);
+            mediaRecorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
+            mediaRecorder.setAudioEncodingBitRate(128000);
+            mediaRecorder.setAudioSamplingRate(44100);
+            mediaRecorder.setOutputFile(audioFilePath);
+
+            mediaRecorder.prepare();
+            mediaRecorder.start();
+
+            isRecording = true;
+            recordingStartTime = System.currentTimeMillis();
+
+            // Update UI
+            sendVoice.setImageResource(R.drawable.ic_stop);
+            etMessage.setHint("🎙 Recording...");
+            etMessage.setEnabled(false);
+
+            Toast.makeText(this, "Recording started", Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to start recording: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Stop audio recording and upload
+     */
+    private void stopRecording() {
+        try {
+            if (mediaRecorder != null) {
+                mediaRecorder.stop();
+                mediaRecorder.release();
+                mediaRecorder = null;
+            }
+
+            isRecording = false;
+
+            // Calculate duration
+            long recordingEndTime = System.currentTimeMillis();
+            int durationSeconds = (int) ((recordingEndTime - recordingStartTime) / 1000);
+
+            // Reset UI
+            sendVoice.setImageResource(R.drawable.ic_mic);
+            etMessage.setHint("Type a message");
+            etMessage.setEnabled(true);
+
+            // Check minimum duration (1 second)
+            if (durationSeconds < 1) {
+                Toast.makeText(this, "Recording too short", Toast.LENGTH_SHORT).show();
+                new java.io.File(audioFilePath).delete();
+                return;
+            }
+
+            // Upload audio
+            uploadAudioMessage(audioFilePath, durationSeconds);
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to stop recording: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Upload audio message to Cloudinary
+     */
+    private void uploadAudioMessage(String filePath, int duration) {
+        Toast.makeText(this, "Uploading voice message...", Toast.LENGTH_SHORT).show();
+
+        java.io.File audioFile = new java.io.File(filePath);
+        Uri audioUri = Uri.fromFile(audioFile);
+
+        CloudinaryUploader.upload(
+                this,
+                audioUri,
+                "chat_audio",
+                new CloudinaryUploader.Callback() {
+                    @Override
+                    public void onProgress(int percent) {
+                        // Could show progress
+                    }
+
+                    @Override
+                    public void onSuccess(String secureUrl) {
+                        runOnUiThread(() -> {
+                            sendAudioMessage(secureUrl, duration);
+                            Toast.makeText(ChatActivity.this,
+                                    "Voice message sent",
+                                    Toast.LENGTH_SHORT).show();
+                            
+                            // Delete local file
+                            audioFile.delete();
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(ChatActivity.this,
+                                    "Upload failed: " + error,
+                                    Toast.LENGTH_SHORT).show();
+                            
+                            // Delete local file
+                            audioFile.delete();
+                        });
+                    }
+                });
+    }
+
+    /**
+     * Send audio message to Firebase
+     */
+    private void sendAudioMessage(String mediaUrl, int duration) {
+        String messageId = messagesRef.push().getKey();
+        if (messageId == null) {
+            return;
+        }
+
+        Map<String, Object> msgData = new HashMap<>();
+        msgData.put("senderId", myUid);
+        msgData.put("messageType", MessageModel.TYPE_AUDIO);
+        msgData.put("mediaUrl", mediaUrl);
+        msgData.put("audioDuration", duration);
+        msgData.put("timestamp", ServerValue.TIMESTAMP);
+
+        // Build multi-path update
+        Map<String, Object> update = new HashMap<>();
+        update.put("messages/" + chatId + "/" + messageId, msgData);
+        update.put("chats/" + chatId + "/lastMessage", "🎤 Voice message");
+        update.put("chats/" + chatId + "/lastTimestamp", ServerValue.TIMESTAMP);
+
+        // Ensure chat metadata exists
+        update.put("chats/" + chatId + "/type", "private");
+        update.put("chats/" + chatId + "/participants/" + myUid, true);
+        update.put("chats/" + chatId + "/participants/" + otherUid, true);
+
+        // Update receiver's userChats
+        update.put("userChats/" + otherUid + "/" + chatId + "/visible", true);
+        update.put("userChats/" + otherUid + "/" + chatId + "/unreadCount",
+                ServerValue.increment(1));
+
+        // Reset my own unread count
+        update.put("userChats/" + myUid + "/" + chatId + "/visible", true);
+        update.put("userChats/" + myUid + "/" + chatId + "/unreadCount", 0);
+
+        FirebaseDatabase.getInstance().getReference()
+                .updateChildren(update)
+                .addOnFailureListener(e
+                        -> Toast.makeText(this, "Failed to send: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
     }
 }

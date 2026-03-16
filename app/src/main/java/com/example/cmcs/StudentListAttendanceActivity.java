@@ -16,6 +16,7 @@ import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.cmcs.adapters.StudentAttendanceAdapter;
 import com.example.cmcs.models.StudentModel;
@@ -39,6 +40,7 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
     private SearchView searchViewStudents;
     private RecyclerView recyclerViewStudents;
     private ProgressBar progressBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private StudentAttendanceAdapter adapter;
     private List<StudentAttendanceAdapter.StudentAttendanceState> allStudentStates = new ArrayList<>();
@@ -75,8 +77,13 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
         searchViewStudents = findViewById(R.id.searchViewStudents);
         recyclerViewStudents = findViewById(R.id.recyclerViewStudents);
         progressBar = findViewById(R.id.progressBarStudentList);
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshStudents);
 
         toolbar.setNavigationOnClickListener(v -> finish());
+
+        // SwipeRefreshLayout — Fix 4
+        swipeRefreshLayout.setColorSchemeResources(R.color.cmcs_primary_dark);
+        swipeRefreshLayout.setOnRefreshListener(this::refreshStudentList);
 
         recyclerViewStudents.setLayoutManager(new LinearLayoutManager(this));
         adapter = new StudentAttendanceAdapter(this, allStudentStates, new StudentAttendanceAdapter.OnSelectionChangedListener() {
@@ -151,6 +158,32 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
         loadData();
     }
 
+    // ── Fix 3: toolbar menu ───────────────────────────────────────────────────
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_student_list_toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_refresh_students) {
+            refreshStudentList();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void refreshStudentList() {
+        progressBar.setVisibility(View.VISIBLE);
+        allStudentStates.clear();
+        classStudents.clear();
+        attendanceMap.clear();
+        adapter.updateData(new ArrayList<>());
+        loadData();
+    }
+
+    // ── Fix 1 & 2: proper loading flow + temp list ────────────────────────────
     private void loadData() {
         progressBar.setVisibility(View.VISIBLE);
 
@@ -158,7 +191,9 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
         studentsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                classStudents.clear();
+                // Fix 2: build into a temp list; only swap once the full loop finishes
+                List<StudentModel> tempStudents = new ArrayList<>();
+
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     StudentModel student = ds.getValue(StudentModel.class);
                     if (student != null) {
@@ -174,10 +209,14 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
                                 student.getYear() != null &&
                                 parsedCourse.equalsIgnoreCase(student.getCourse()) &&
                                 parsedYear.equalsIgnoreCase(student.getYear())) {
-                            classStudents.add(student);
+                            tempStudents.add(student);
                         }
                     }
                 }
+
+                // Swap atomically after the entire snapshot is processed
+                classStudents.clear();
+                classStudents.addAll(tempStudents);
 
                 Collections.sort(classStudents, (s1, s2) -> {
                     try {
@@ -189,21 +228,27 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
                     }
                 });
 
-                android.util.Log.d("StudentListDebug", "Filtered students: " + classStudents.size());
+                Log.d("StudentListDebug", "Filtered students: " + classStudents.size());
 
-                if (classStudents.size() == 0) {
+                if (classStudents.isEmpty()) {
+                    // Fix 1: hide loading only here, after full processing
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(StudentListAttendanceActivity.this, "No students found for this class.", Toast.LENGTH_SHORT).show();
+                    swipeRefreshLayout.setRefreshing(false);
+                    Toast.makeText(StudentListAttendanceActivity.this,
+                            "No students found for this class.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
+                // Progress bar stays VISIBLE — loadAttendanceData will hide it via mergeData()
                 loadAttendanceData();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(StudentListAttendanceActivity.this, "Failed to load students", Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
+                Toast.makeText(StudentListAttendanceActivity.this,
+                        "Failed to load students", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -229,6 +274,7 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 progressBar.setVisibility(View.GONE);
+                swipeRefreshLayout.setRefreshing(false);
                 Toast.makeText(StudentListAttendanceActivity.this, "Failed to load attendance", Toast.LENGTH_SHORT).show();
             }
         });
@@ -268,7 +314,9 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
         updateSummaryBar();
 
         adapter.updateData(allStudentStates);
+        // Fix 1: progress bar hidden ONLY here, after full merge is complete
         progressBar.setVisibility(View.GONE);
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     private void updateSummaryBar() {

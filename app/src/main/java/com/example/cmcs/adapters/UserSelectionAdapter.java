@@ -28,8 +28,11 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
 
     // ── Callback ──────────────────────────────────────────────────────────
     public interface OnUserClickListener {
-
         void onUserClick(UserModel user);
+    }
+    
+    public interface OnUserCheckListener {
+        void onUserCheck(UserModel user, boolean isChecked);
     }
 
     // ── Fields ────────────────────────────────────────────────────────────
@@ -37,6 +40,11 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
     private final List<UserModel> fullList;     // master list (never filtered)
     private final List<UserModel> displayList;  // shown in RecyclerView
     private OnUserClickListener clickListener;
+    private OnUserCheckListener checkListener;
+    
+    // Selection mode
+    private boolean selectionMode = false;
+    private final List<String> selectedUids = new ArrayList<>();
 
     // ── Constructor ───────────────────────────────────────────────────────
     public UserSelectionAdapter(Context context, List<UserModel> users) {
@@ -47,6 +55,21 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
 
     public void setOnUserClickListener(OnUserClickListener listener) {
         this.clickListener = listener;
+    }
+    
+    public void setOnUserCheckListener(OnUserCheckListener listener) {
+        this.checkListener = listener;
+    }
+    
+    /**
+     * Enable or disable selection mode with checkboxes
+     */
+    public void setSelectionMode(boolean enabled) {
+        this.selectionMode = enabled;
+        if (!enabled) {
+            selectedUids.clear();
+        }
+        notifyDataSetChanged();
     }
 
     // ── Data update ───────────────────────────────────────────────────────
@@ -110,12 +133,51 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
         } else {
             holder.ivAvatar.setImageResource(R.drawable.ic_drawer_profile);
         }
-
-        holder.itemView.setOnClickListener(v -> {
-            if (clickListener != null) {
-                clickListener.onUserClick(user);
-            }
-        });
+        
+        // Selection mode
+        if (selectionMode) {
+            holder.checkbox.setVisibility(View.VISIBLE);
+            boolean isSelected = selectedUids.contains(user.getAuthUid());
+            holder.checkbox.setChecked(isSelected);
+            
+            holder.itemView.setOnClickListener(v -> {
+                boolean newState = !holder.checkbox.isChecked();
+                holder.checkbox.setChecked(newState);
+                
+                if (newState) {
+                    selectedUids.add(user.getAuthUid());
+                } else {
+                    selectedUids.remove(user.getAuthUid());
+                }
+                
+                if (checkListener != null) {
+                    checkListener.onUserCheck(user, newState);
+                }
+            });
+            
+            holder.checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    if (!selectedUids.contains(user.getAuthUid())) {
+                        selectedUids.add(user.getAuthUid());
+                        if (checkListener != null) {
+                            checkListener.onUserCheck(user, true);
+                        }
+                    }
+                } else {
+                    selectedUids.remove(user.getAuthUid());
+                    if (checkListener != null) {
+                        checkListener.onUserCheck(user, false);
+                    }
+                }
+            });
+        } else {
+            holder.checkbox.setVisibility(View.GONE);
+            holder.itemView.setOnClickListener(v -> {
+                if (clickListener != null) {
+                    clickListener.onUserClick(user);
+                }
+            });
+        }
     }
 
     @Override
@@ -130,6 +192,7 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
         TextView tvName;
         TextView tvSubtitle;
         TextView tvTeacherBadge;
+        android.widget.CheckBox checkbox;
 
         UserViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -137,6 +200,7 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
             tvName = itemView.findViewById(R.id.user_name);
             tvSubtitle = itemView.findViewById(R.id.user_subtitle);
             tvTeacherBadge = itemView.findViewById(R.id.user_teacher_badge);
+            checkbox = itemView.findViewById(R.id.user_checkbox);
         }
     }
 }
