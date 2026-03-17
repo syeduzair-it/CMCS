@@ -1,27 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  fragment_me.xml (Phase 3 — Simplified)
-  
-  Toolbar removed — now owned by MainActivity
-  DrawerLayout kept for navigation drawer functionality
--->
-<androidx.drawerlayout.widget.DrawerLayout
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/me_drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/cmcs_background"
     tools:context=".fragments.MeFragment">
-
-    <!-- ════════════════════════════════════════
-         MAIN CONTENT
-         ════════════════════════════════════════ -->
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:background="@color/cmcs_background">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -154,22 +140,4 @@
 
         </LinearLayout>
 
-    </androidx.core.widget.NestedScrollView>
-
-    <!-- ════════════════════════════════════════
-         NAVIGATION DRAWER (same as ChatsFragment)
-         ════════════════════════════════════════ -->
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/me_navigation_view"
-        android:layout_width="280dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:background="@color/white"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header"
-        app:itemBackground="@drawable/drawer_item_background"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/drawer_menu" />
-
-</androidx.drawerlayout.widget.DrawerLayout>
+</androidx.core.widget.NestedScrollView>

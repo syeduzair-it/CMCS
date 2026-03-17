@@ -99,6 +99,7 @@
                         android:layout_height="wrap_content"
                         android:text="+ Add"
                         android:textSize="12sp"
+                        android:textColor="@color/white"
                         app:backgroundTint="@color/cmcs_primary"
                         android:visibility="gone"
                         style="@style/Widget.MaterialComponents.Button.TextButton" />

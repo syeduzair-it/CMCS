@@ -39,6 +39,7 @@ public class NoticeListFragment extends Fragment {
     public static final String ARG_DB_PATH = "db_path";
     public static final String ARG_ROLE = "role";
     public static final String ARG_CURRENT_UID = "current_uid";
+    public static final String ARG_CURRENT_NAME = "current_name";
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -50,6 +51,7 @@ public class NoticeListFragment extends Fragment {
     private String dbPath;
     private String role;
     private String currentUid;
+    private String currentName = "";
 
     private ValueEventListener valueEventListener;
     private Query firebaseQuery;
@@ -65,6 +67,13 @@ public class NoticeListFragment extends Fragment {
         return f;
     }
 
+    public static NoticeListFragment newInstance(String dbPath, String role,
+            String currentUid, String currentName) {
+        NoticeListFragment f = newInstance(dbPath, role, currentUid);
+        f.getArguments().putString(ARG_CURRENT_NAME, currentName);
+        return f;
+    }
+
     // ── Lifecycle ─────────────────────────────────────────────────────────
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,6 +82,7 @@ public class NoticeListFragment extends Fragment {
             dbPath = getArguments().getString(ARG_DB_PATH);
             role = getArguments().getString(ARG_ROLE);
             currentUid = getArguments().getString(ARG_CURRENT_UID);
+            currentName = getArguments().getString(ARG_CURRENT_NAME, "");
         }
         if (currentUid == null) {
             currentUid = FirebaseAuth.getInstance().getCurrentUser() != null
@@ -96,7 +106,7 @@ public class NoticeListFragment extends Fragment {
         progressBar = view.findViewById(R.id.noticeProgressBar);
         emptyState = view.findViewById(R.id.emptyStateLayout);
 
-        adapter = new NoticeAdapter(requireContext(), noticeList, currentUid, role, dbPath);
+        adapter = new NoticeAdapter(requireContext(), noticeList, currentUid, role, currentName, dbPath);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 

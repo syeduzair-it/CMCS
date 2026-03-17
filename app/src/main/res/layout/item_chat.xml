@@ -4,12 +4,13 @@
 
   Structure:
   ConstraintLayout
-    ├── CircleImageView       – avatar (left)
-    ├── TextView  name        – bold, 16sp
-    ├── TextView  lastMessage – ellipsized, 14sp, secondary color
-    ├── TextView  timestamp   – right-aligned, 12sp
-    ├── TextView  unread badge– filled purple circle (GONE by default)
-    └── TextView  teacher badge – purple pill, visible only for teacher chats
+    ├── FrameLayout (avatar + teacher badge overlay)
+    │     ├── CircleImageView  – avatar
+    │     └── ImageView        – teacher badge (bottom|end, teachers only)
+    ├── TextView  name
+    ├── TextView  lastMessage
+    ├── TextView  timestamp
+    └── TextView  unread badge
 -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -23,17 +24,38 @@
     android:paddingTop="10dp"
     android:paddingBottom="10dp">
 
-    <!-- Avatar -->
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/item_avatar"
+    <!-- Avatar + teacher badge overlay -->
+    <FrameLayout
+        android:id="@+id/item_avatar_frame"
         android:layout_width="52dp"
         android:layout_height="52dp"
-        android:src="@drawable/ic_user"
-        app:civ_border_color="@color/surfaceElevated"
-        app:civ_border_width="1.5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/item_avatar"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:src="@drawable/ic_user"
+            app:civ_border_color="@color/surfaceElevated"
+            app:civ_border_width="1.5dp" />
+
+        <!-- Teacher verification badge — bottom-right corner -->
+        <ImageView
+            android:id="@+id/item_teacher_badge"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/ic_teacher_badge_dark"
+            android:src="@drawable/ic_teacher"
+            android:tint="@color/white"
+            android:padding="4dp"
+            android:elevation="2dp"
+            android:visibility="gone"
+            android:importantForAccessibility="no" />
+
+    </FrameLayout>
 
     <!-- Name -->
     <TextView
@@ -48,29 +70,9 @@
         android:textSize="15sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@id/item_timestamp"
-        app:layout_constraintStart_toEndOf="@id/item_avatar"
-        app:layout_constraintTop_toTopOf="@id/item_avatar"
+        app:layout_constraintStart_toEndOf="@id/item_avatar_frame"
+        app:layout_constraintTop_toTopOf="@id/item_avatar_frame"
         tools:text="Ahmad Raza" />
-
-    <!-- Teacher badge (visible only when other user is a teacher) -->
-    <TextView
-        android:id="@+id/item_teacher_badge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:background="@drawable/badge_teacher_bg"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp"
-        android:text="Teacher"
-        android:textColor="@color/white"
-        android:textSize="10sp"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/item_name"
-        app:layout_constraintStart_toEndOf="@id/item_name"
-        app:layout_constraintTop_toTopOf="@id/item_name" />
 
     <!-- Last message preview -->
     <TextView
@@ -84,9 +86,9 @@
         android:maxLines="1"
         android:textColor="@color/textSecondary"
         android:textSize="13sp"
-        app:layout_constraintBottom_toBottomOf="@id/item_avatar"
+        app:layout_constraintBottom_toBottomOf="@id/item_avatar_frame"
         app:layout_constraintEnd_toStartOf="@id/item_unread_badge"
-        app:layout_constraintStart_toEndOf="@id/item_avatar"
+        app:layout_constraintStart_toEndOf="@id/item_avatar_frame"
         app:layout_constraintTop_toBottomOf="@id/item_name"
         tools:text="Okay, see you tomorrow!" />
 
@@ -112,7 +114,7 @@
         android:textSize="10sp"
         android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/item_avatar"
+        app:layout_constraintBottom_toBottomOf="@id/item_avatar_frame"
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="3"
         tools:visibility="visible" />

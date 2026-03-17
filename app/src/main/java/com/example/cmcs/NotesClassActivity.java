@@ -160,7 +160,7 @@ public class NotesClassActivity extends AppCompatActivity {
             String role, String uid) {
         Intent i = new Intent(this, NotesSubjectActivity.class);
         i.putExtra(EXTRA_DEPT, dept);
-        i.putExtra(EXTRA_COURSE, course);
+        i.putExtra(EXTRA_COURSE, normalizeCourse(course));
         i.putExtra(EXTRA_YEAR, year);
         i.putExtra(EXTRA_ROLE, role);
         i.putExtra("uid", uid);
@@ -178,6 +178,16 @@ public class NotesClassActivity extends AppCompatActivity {
         return s.trim().replace(" ", "_").replace(".", "_")
                 .replace("#", "_").replace("$", "_")
                 .replace("[", "_").replace("]", "_");
+    }
+
+    /**
+     * Normalizes a course name to lowercase for consistent Firebase paths.
+     * "BCA" → "bca", "BSC" → "bsc", etc.
+     * Always use this when building notes/ paths.
+     */
+    public static String normalizeCourse(String course) {
+        if (course == null) return "_";
+        return course.trim().toLowerCase();
     }
 
     static String unsanitize(String s) {

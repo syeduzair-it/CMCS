@@ -1,89 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  fragment_chats.xml (Phase 3 — Simplified)
-  
-  Toolbar removed — now owned by MainActivity
-  DrawerLayout kept for navigation drawer functionality
-  FAB removed — now owned by MainActivity (will be hidden for this fragment)
--->
-<androidx.drawerlayout.widget.DrawerLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/cmcs_background">
 
-    <!-- ════════════════════════════════════════
-         MAIN CONTENT
-         ════════════════════════════════════════ -->
-    <LinearLayout
+    <!-- Chat list RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chat_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/_80sdp"
+        android:scrollbars="none" />
+
+    <!-- Empty state (shown when no chats exist) -->
+    <LinearLayout
+        android:id="@+id/empty_state_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
         android:orientation="vertical"
-        android:background="@color/cmcs_background">
+        android:visibility="gone">
 
-        <!-- Chat list RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chat_recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingBottom="@dimen/_80sdp"
-            android:scrollbars="none" />
-
-        <!-- Empty state (shown when no chats exist) -->
-        <LinearLayout
-            android:id="@+id/empty_state_view"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:text="💬"
+            android:textSize="48sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_12sdp"
+            android:text="No chats yet"
+            android:textColor="@color/textPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_6sdp"
             android:gravity="center"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="💬"
-                android:textSize="48sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:text="No chats yet"
-                android:textColor="@color/textPrimary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_6sdp"
-                android:gravity="center"
-                android:text="Tap + to start a new conversation"
-                android:textColor="@color/textSecondary"
-                android:textSize="14sp" />
-
-        </LinearLayout>
+            android:text="Tap + to start a new conversation"
+            android:textColor="@color/textSecondary"
+            android:textSize="14sp" />
 
     </LinearLayout>
 
-    <!-- ════════════════════════════════════════
-         NAVIGATION DRAWER
-         ════════════════════════════════════════ -->
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/navigation_view"
-        android:layout_width="280dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:background="@color/white"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header"
-        app:itemBackground="@drawable/drawer_item_background"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/drawer_menu" />
-
-</androidx.drawerlayout.widget.DrawerLayout>
+</LinearLayout>

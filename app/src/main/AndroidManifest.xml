@@ -24,7 +24,7 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/cmcs_icon"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
@@ -54,7 +54,8 @@
         <!-- Login Screen -->
         <activity
             android:name=".login.Login"
-            android:exported="true" />
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize" />
         <!-- OTP Screen -->
         <activity
             android:name=".login.OtpVerificationActivity"
@@ -62,7 +63,8 @@
         <!-- Set Password Screen -->
         <activity
             android:name=".login.SetPassword"
-            android:exported="true" />
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize" />
         <!-- Select User (Start Chat) -->
         <activity
             android:name=".SelectUserActivity"
@@ -138,6 +140,7 @@
         <activity android:name=".NotesListActivity" android:exported="false" />
         <activity android:name=".AddNoteActivity" android:exported="false" />
         <activity android:name=".NoteViewersActivity" android:exported="false" />
+        <activity android:name=".UploadNotesClassActivity" android:exported="false" />
         <activity android:name=".NoticesPostedActivity" android:exported="false" />
         <!-- Stories System -->
         <activity android:name=".AddStoryActivity"

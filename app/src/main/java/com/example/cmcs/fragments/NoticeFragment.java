@@ -197,9 +197,9 @@ public class NoticeFragment extends Fragment {
                         currentRole, currentUid, currentDept,
                         currentCourse, currentYear, currentName);
             case TAB_COLLEGE:
-                return NoticeListFragment.newInstance("notices/college", currentRole, currentUid);
+                return NoticeListFragment.newInstance("notices/college", currentRole, currentUid, currentName);
             default: // TAB_TRAINING
-                return NoticeListFragment.newInstance("notices/training", currentRole, currentUid);
+                return NoticeListFragment.newInstance("notices/training", currentRole, currentUid, currentName);
         }
     }
 
@@ -374,7 +374,7 @@ public class NoticeFragment extends Fragment {
                         for (String noticeId : ids) {
                             FirebaseDatabase.getInstance()
                                     .getReference("noticeViews")
-                                    .child(noticeId).child("viewers").child(currentUid)
+                                    .child(noticeId).child(currentUid)
                                     .addListenerForSingleValueEvent(new ValueEventListener() {
                                         @Override public void onDataChange(@NonNull DataSnapshot s) {
                                             if (!s.exists()) unread.incrementAndGet();

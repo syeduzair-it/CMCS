@@ -119,7 +119,7 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
         holder.tvSubtitle.setText(user.getSubtitle());
 
         boolean isTeacher = "teacher".equalsIgnoreCase(user.getRole());
-        holder.tvTeacherBadge.setVisibility(isTeacher ? View.VISIBLE : View.GONE);
+        holder.ivTeacherBadge.setVisibility(isTeacher ? View.VISIBLE : View.GONE);
 
         // Profile image
         if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
@@ -191,16 +191,16 @@ public class UserSelectionAdapter extends RecyclerView.Adapter<UserSelectionAdap
         CircleImageView ivAvatar;
         TextView tvName;
         TextView tvSubtitle;
-        TextView tvTeacherBadge;
+        android.widget.ImageView ivTeacherBadge;
         android.widget.CheckBox checkbox;
 
         UserViewHolder(@NonNull View itemView) {
             super(itemView);
-            ivAvatar = itemView.findViewById(R.id.user_avatar);
-            tvName = itemView.findViewById(R.id.user_name);
-            tvSubtitle = itemView.findViewById(R.id.user_subtitle);
-            tvTeacherBadge = itemView.findViewById(R.id.user_teacher_badge);
-            checkbox = itemView.findViewById(R.id.user_checkbox);
+            ivAvatar       = itemView.findViewById(R.id.user_avatar);
+            tvName         = itemView.findViewById(R.id.user_name);
+            tvSubtitle     = itemView.findViewById(R.id.user_subtitle);
+            ivTeacherBadge = itemView.findViewById(R.id.user_teacher_badge);
+            checkbox       = itemView.findViewById(R.id.user_checkbox);
         }
     }
 }

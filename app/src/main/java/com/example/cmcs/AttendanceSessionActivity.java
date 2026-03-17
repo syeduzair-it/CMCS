@@ -178,7 +178,9 @@ public class AttendanceSessionActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Kolkata"));
         currentDate = sdf.format(new Date());
+        android.util.Log.d("DATE_DEBUG", "AttendanceSession today date (IST): " + currentDate);
         tvDate.setText("Date: " + currentDate);
 
         toggleGroupMode.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
@@ -513,11 +515,15 @@ public class AttendanceSessionActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 int count = 0;
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    StudentModel student = ds.getValue(StudentModel.class);
-                    if (student != null) {
-                        if (parsedCourse.equalsIgnoreCase(student.getCourse()) && parsedYear.equalsIgnoreCase(student.getYear())) {
-                            count++;
+                    try {
+                        StudentModel student = ds.getValue(StudentModel.class);
+                        if (student != null) {
+                            if (parsedCourse.equalsIgnoreCase(student.getCourse()) && parsedYear.equalsIgnoreCase(student.getYear())) {
+                                count++;
+                            }
                         }
+                    } catch (Exception e) {
+                        android.util.Log.e("AttendanceSession", "Failed to parse student: " + e.getMessage());
                     }
                 }
                 totalStudents = count;
@@ -552,14 +558,18 @@ public class AttendanceSessionActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<StudentModel> tempStudents = new ArrayList<>();
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    StudentModel student = ds.getValue(StudentModel.class);
-                    if (student != null) {
-                        if (student.getUid() == null) {
-                            student.setUid(ds.getKey());
+                    try {
+                        StudentModel student = ds.getValue(StudentModel.class);
+                        if (student != null) {
+                            if (student.getUid() == null) {
+                                student.setUid(ds.getKey());
+                            }
+                            if (parsedCourse.equalsIgnoreCase(student.getCourse()) && parsedYear.equalsIgnoreCase(student.getYear())) {
+                                tempStudents.add(student);
+                            }
                         }
-                        if (parsedCourse.equalsIgnoreCase(student.getCourse()) && parsedYear.equalsIgnoreCase(student.getYear())) {
-                            tempStudents.add(student);
-                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("AttendanceSession", "Failed to parse student: " + e.getMessage());
                     }
                 }
 

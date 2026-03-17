@@ -499,12 +499,14 @@ public class StoryViewerActivity extends AppCompatActivity {
                                 public void onDataChange(@NonNull DataSnapshot userSnap) {
                                     String name = userSnap.child("name").getValue(String.class);
                                     String profileImage = userSnap.child("profileImage").getValue(String.class);
+                                    String role = userSnap.child("role").getValue(String.class);
 
                                     if (name == null || name.isEmpty()) {
                                         name = "Unknown";
                                     }
 
                                     ViewerModel v = new ViewerModel(uid, name, profileImage, finalTimestamp);
+                                    v.setRole(role);
 
                                     synchronized (viewersList) {
                                         viewersList.add(v);

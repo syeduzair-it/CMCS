@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,16 +24,12 @@ import com.example.cmcs.SelectUserActivity;
 import com.example.cmcs.adapters.ChatListAdapter;
 import com.example.cmcs.login.Login;
 import com.example.cmcs.models.ChatModel;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,15 +58,8 @@ public class ChatsFragment extends Fragment {
     private static final String PREFS_NAME = "cmcs_prefs";
 
     // ── Views ─────────────────────────────────────────────────────────────
-    private DrawerLayout drawerLayout;
     private RecyclerView recyclerView;
     private View emptyStateView;
-    private NavigationView navigationView;
-
-    // ── Drawer header views (loaded after header inflation) ───────────────
-    private CircleImageView navHeaderAvatar;
-    private TextView navHeaderName;
-    private TextView navHeaderRole;
 
     // ── Firebase ──────────────────────────────────────────────────────────
     private DatabaseReference userChatsRef;
@@ -111,16 +99,10 @@ public class ChatsFragment extends Fragment {
         // 3. Set up RecyclerView
         setupRecyclerView();
 
-        // 4. Set up Navigation Drawer
-        setupNavigationDrawer();
-
-        // 5. Init Firebase references with keepSynced
+        // 4. Init Firebase references with keepSynced
         initFirebase();
 
-        // 6. Load nav header (user profile)
-        loadNavHeader();
-
-        // 7. Load chat list
+        // 5. Load chat list
         loadChatList();
     }
 
@@ -148,25 +130,8 @@ public class ChatsFragment extends Fragment {
     // Setup helpers
     // ─────────────────────────────────────────────────────────────────────
     private void bindViews(View view) {
-        drawerLayout = view.findViewById(R.id.drawer_layout);
-        recyclerView = view.findViewById(R.id.chat_recycler_view);
+        recyclerView   = view.findViewById(R.id.chat_recycler_view);
         emptyStateView = view.findViewById(R.id.empty_state_view);
-        navigationView = view.findViewById(R.id.navigation_view);
-
-        // Nav header child views
-        View headerView = navigationView.getHeaderView(0);
-        navHeaderAvatar = headerView.findViewById(R.id.nav_header_avatar);
-        navHeaderName = headerView.findViewById(R.id.nav_header_name);
-        navHeaderRole = headerView.findViewById(R.id.nav_header_role);
-    }
-
-    /**
-     * Called by MainActivity when toolbar navigation icon is clicked
-     */
-    public void openDrawer() {
-        if (drawerLayout != null) {
-            drawerLayout.openDrawer(navigationView);
-        }
     }
 
     private void setupRecyclerView() {
@@ -207,33 +172,6 @@ public class ChatsFragment extends Fragment {
 
     }
 
-    private void setupNavigationDrawer() {
-        navigationView.setNavigationItemSelectedListener(item -> {
-            drawerLayout.closeDrawer(navigationView);
-
-            int id = item.getItemId();
-
-            if (id == R.id.drawer_profile) {
-                Toast.makeText(requireContext(),
-                        "Profile — coming soon!", Toast.LENGTH_SHORT).show();
-
-            } else if (id == R.id.drawer_settings) {
-                Toast.makeText(requireContext(),
-                        "Settings — coming soon!", Toast.LENGTH_SHORT).show();
-
-            } else if (id == R.id.drawer_logout) {
-                handleLogout();
-
-            } else if (id == R.id.drawer_about) {
-                Toast.makeText(requireContext(),
-                        "CMCS — College of Management & Computer Science",
-                        Toast.LENGTH_LONG).show();
-            }
-
-            return true;
-        });
-    }
-
     private void initFirebase() {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
 
@@ -249,42 +187,6 @@ public class ChatsFragment extends Fragment {
     // ─────────────────────────────────────────────────────────────────────
     // Firebase data loading
     // ─────────────────────────────────────────────────────────────────────
-    /**
-     * Loads and populates the nav header with the current user's profile
-     * fetched from users/<authUid>.
-     */
-    private void loadNavHeader() {
-        usersRef.child(authUid).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (!isAdded()) {
-                    return;
-                }
-
-                String name = snapshot.child("name").getValue(String.class);
-                String imgUrl = snapshot.child("profileImage").getValue(String.class);
-                String userRole = snapshot.child("role").getValue(String.class);
-
-                navHeaderName.setText(name != null ? name : "Unknown User");
-                navHeaderRole.setText("teacher".equalsIgnoreCase(userRole) ? "Teacher" : "Student");
-
-                if (imgUrl != null && !imgUrl.isEmpty()) {
-                    Glide.with(ChatsFragment.this)
-                            .load(imgUrl)
-                            .apply(new RequestOptions()
-                                    .placeholder(R.drawable.ic_drawer_profile)
-                                    .circleCrop())
-                            .into(navHeaderAvatar);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Non-critical – header stays at defaults
-            }
-        });
-    }
-
     /**
      * Main chat list loader.
      *

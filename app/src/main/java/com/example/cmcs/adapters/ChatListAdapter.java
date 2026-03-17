@@ -80,9 +80,9 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
         // Timestamp
         holder.tvTimestamp.setText(formatTimestamp(chat.getLastTimestamp()));
 
-        // Teacher badge
+        // Teacher badge (circular overlay on avatar)
         boolean isTeacher = "teacher".equalsIgnoreCase(chat.getOtherUserRole());
-        holder.tvTeacherBadge.setVisibility(isTeacher ? View.VISIBLE : View.GONE);
+        holder.ivTeacherBadge.setVisibility(isTeacher ? View.VISIBLE : View.GONE);
 
         // Profile image
         String imageUrl = chat.getOtherUserProfileImage();
@@ -170,16 +170,16 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
         TextView tvLastMessage;
         TextView tvTimestamp;
         TextView tvUnreadBadge;
-        TextView tvTeacherBadge;
+        android.widget.ImageView ivTeacherBadge;
 
         ChatViewHolder(@NonNull View itemView) {
             super(itemView);
-            ivAvatar = itemView.findViewById(R.id.item_avatar);
-            tvName = itemView.findViewById(R.id.item_name);
-            tvLastMessage = itemView.findViewById(R.id.item_last_message);
-            tvTimestamp = itemView.findViewById(R.id.item_timestamp);
-            tvUnreadBadge = itemView.findViewById(R.id.item_unread_badge);
-            tvTeacherBadge = itemView.findViewById(R.id.item_teacher_badge);
+            ivAvatar       = itemView.findViewById(R.id.item_avatar);
+            tvName         = itemView.findViewById(R.id.item_name);
+            tvLastMessage  = itemView.findViewById(R.id.item_last_message);
+            tvTimestamp    = itemView.findViewById(R.id.item_timestamp);
+            tvUnreadBadge  = itemView.findViewById(R.id.item_unread_badge);
+            ivTeacherBadge = itemView.findViewById(R.id.item_teacher_badge);
         }
     }
 }

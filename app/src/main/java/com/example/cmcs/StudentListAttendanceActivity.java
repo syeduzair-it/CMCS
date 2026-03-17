@@ -152,8 +152,11 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
         }
 
         if (currentDate == null) {
-            currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date());
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+            sdf.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Kolkata"));
+            currentDate = sdf.format(new java.util.Date());
         }
+        android.util.Log.d("DATE_DEBUG", "StudentListAttendance date: " + currentDate);
 
         loadData();
     }
@@ -195,7 +198,13 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
                 List<StudentModel> tempStudents = new ArrayList<>();
 
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    StudentModel student = ds.getValue(StudentModel.class);
+                    StudentModel student;
+                    try {
+                        student = ds.getValue(StudentModel.class);
+                    } catch (Exception e) {
+                        Log.e("StudentListAttendance", "Failed to parse student: " + e.getMessage());
+                        continue;
+                    }
                     if (student != null) {
                         if (student.getUid() == null) {
                             student.setUid(ds.getKey());
@@ -258,6 +267,8 @@ public class StudentListAttendanceActivity extends AppCompatActivity {
             progressBar.setVisibility(View.GONE);
             return;
         }
+
+        Log.d("PATH_DEBUG", "Reading: attendance/" + classId + "/" + currentDate);
 
         DatabaseReference attendanceRef = FirebaseDatabase.getInstance().getReference("attendance").child(classId).child(currentDate);
         attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {

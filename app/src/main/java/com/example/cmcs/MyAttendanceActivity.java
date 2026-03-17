@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
@@ -62,6 +63,9 @@ public class MyAttendanceActivity extends AppCompatActivity {
 
     private HashSet<CalendarDay> presentDates = new HashSet<>();
     private HashSet<CalendarDay> absentDates = new HashSet<>();
+
+    private ValueEventListener attendanceValueListener;
+    private DatabaseReference attendanceDbRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -165,8 +169,18 @@ public class MyAttendanceActivity extends AppCompatActivity {
     }
 
     private void fetchAttendance(String classId) {
-        DatabaseReference attendanceRef = FirebaseDatabase.getInstance().getReference("attendance").child(classId);
-        attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        // IST timezone — must match the timezone used when writing attendance
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+
+        String todayDate = sdf.format(new Date());
+        Log.d("DATE_DEBUG", "Today date (IST): " + todayDate);
+        Log.d("PATH_DEBUG", "Reading: attendance/" + classId);
+
+        attendanceDbRef = FirebaseDatabase.getInstance().getReference("attendance").child(classId);
+
+        // ValueEventListener so UI updates in real time (including today's data)
+        attendanceValueListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 progressBar.setVisibility(View.GONE);
@@ -176,13 +190,14 @@ public class MyAttendanceActivity extends AppCompatActivity {
                     return;
                 }
 
+                Log.d("DATE_DEBUG", "Attendance node children: " + snapshot.getChildrenCount());
+
                 presentCount = 0;
+                totalSessions = 0;
                 presentDates.clear();
                 absentDates.clear();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
                 for (DataSnapshot dateSnapshot : snapshot.getChildren()) {
-
                     if (dateSnapshot.getChildrenCount() == 0) {
                         continue; // ignore empty session
                     }
@@ -190,12 +205,16 @@ public class MyAttendanceActivity extends AppCompatActivity {
                     totalSessions++;
 
                     String dateStr = dateSnapshot.getKey();
+                    Log.d("DATE_DEBUG", "Found session date: " + dateStr
+                            + " | hasMyUid=" + dateSnapshot.hasChild(currentUid));
+
                     CalendarDay calendarDay = null;
                     if (dateStr != null) {
                         try {
                             Date date = sdf.parse(dateStr);
                             if (date != null) {
-                                java.util.Calendar cal = java.util.Calendar.getInstance();
+                                java.util.Calendar cal = java.util.Calendar.getInstance(
+                                        TimeZone.getTimeZone("Asia/Kolkata"));
                                 cal.setTime(date);
                                 calendarDay = CalendarDay.from(cal);
                             }
@@ -206,13 +225,9 @@ public class MyAttendanceActivity extends AppCompatActivity {
 
                     if (dateSnapshot.hasChild(currentUid)) {
                         presentCount++;
-                        if (calendarDay != null) {
-                            presentDates.add(calendarDay);
-                        }
+                        if (calendarDay != null) presentDates.add(calendarDay);
                     } else {
-                        if (calendarDay != null) {
-                            absentDates.add(calendarDay);
-                        }
+                        if (calendarDay != null) absentDates.add(calendarDay);
                     }
                 }
 
@@ -223,8 +238,8 @@ public class MyAttendanceActivity extends AppCompatActivity {
 
                 absentCount = totalSessions - presentCount;
 
-                Log.d("MyAttendance", "TotalSessions=" + totalSessions);
-                Log.d("MyAttendance", "Present=" + presentCount);
+                Log.d("MyAttendance", "TotalSessions=" + totalSessions
+                        + " Present=" + presentCount + " Absent=" + absentCount);
 
                 updateUI();
             }
@@ -234,7 +249,8 @@ public class MyAttendanceActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 showNoData();
             }
-        });
+        };
+        attendanceDbRef.addValueEventListener(attendanceValueListener);
     }
 
     private void updateUI() {
@@ -285,6 +301,14 @@ public class MyAttendanceActivity extends AppCompatActivity {
         progressBar.setVisibility(View.GONE);
         layoutAttendanceData.setVisibility(View.GONE);
         tvNoData.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (attendanceDbRef != null && attendanceValueListener != null) {
+            attendanceDbRef.removeEventListener(attendanceValueListener);
+        }
     }
 
     private class PresentDayDecorator implements DayViewDecorator {

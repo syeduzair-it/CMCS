@@ -243,7 +243,7 @@ public class ClassNoticeFragment extends Fragment {
 
     private void showNoticeList(String dbPath) {
         classNoticeContainer.setVisibility(View.VISIBLE);
-        NoticeListFragment nlf = NoticeListFragment.newInstance(dbPath, role, uid);
+        NoticeListFragment nlf = NoticeListFragment.newInstance(dbPath, role, uid, name);
         getChildFragmentManager().beginTransaction()
                 .replace(R.id.classNoticeContainer, nlf)
                 .commitNow();

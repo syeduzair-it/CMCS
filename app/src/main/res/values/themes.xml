@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Base theme — inherits Material Components, wires CMCS palette -->
-    <style name="Base.Theme.CMCS" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Base.Theme.CMCS" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/cmcs_primary</item>
         <item name="colorPrimaryVariant">@color/cmcs_primary_dark</item>
         <item name="colorSecondary">@color/cmcs_accent</item>
@@ -22,7 +22,7 @@
     <style name="Theme.CMCS" parent="Base.Theme.CMCS" />
 
     <!-- Splash screen theme -->
-    <style name="Theme.CMCS.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.CMCS.Splash" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@color/cmcs_background</item>
         <item name="postSplashScreenTheme">@style/Theme.CMCS</item>

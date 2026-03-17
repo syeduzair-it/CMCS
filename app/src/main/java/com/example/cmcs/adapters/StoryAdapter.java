@@ -118,7 +118,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.VH> {
             h.tvLabel.setText("Your Story");
             h.tvAddBadge.setVisibility(View.VISIBLE);
             h.storyRing.setVisibility(View.INVISIBLE);
-            Glide.with(ctx).load(R.drawable.ic_user).circleCrop().into(h.ivThumb);
+            Glide.with(ctx).load(R.drawable.ic_teacher).circleCrop().into(h.ivThumb);
             h.itemView.setOnClickListener(v -> {
                 Intent i = new Intent(ctx, AddStoryActivity.class);
                 i.putExtra(AddStoryActivity.EXTRA_TYPE, "teacher");
@@ -131,7 +131,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.VH> {
             h.tvLabel.setText("College Story");
             h.tvAddBadge.setVisibility(View.VISIBLE);
             h.storyRing.setVisibility(View.INVISIBLE);
-            Glide.with(ctx).load(R.drawable.cmcs_logo).circleCrop().into(h.ivThumb);
+            Glide.with(ctx).load(R.drawable.cmcs_logo_symbol).circleCrop().into(h.ivThumb);
             h.itemView.setOnClickListener(v -> {
                 Intent i = new Intent(ctx, AddStoryActivity.class);
                 i.putExtra(AddStoryActivity.EXTRA_TYPE, "college");

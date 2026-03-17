@@ -102,7 +102,7 @@ public class NotesListActivity extends AppCompatActivity {
         notesRef = FirebaseDatabase.getInstance()
                 .getReference("notes")
                 .child(NotesClassActivity.sanitize(dept))
-                .child(NotesClassActivity.sanitize(course))
+                .child(NotesClassActivity.normalizeCourse(course))
                 .child(NotesClassActivity.sanitize(year))
                 .child(subject != null ? subject : "_");
 

@@ -352,6 +352,7 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         CircleImageView ivAvatar = findViewById(R.id.userImage);
+        ImageView ivTeacherBadge = findViewById(R.id.iv_teacher_badge);
 
         if (otherAvatar != null && !otherAvatar.isEmpty()) {
             Glide.with(this)
@@ -360,6 +361,21 @@ public class ChatActivity extends AppCompatActivity {
                             .placeholder(R.drawable.ic_user)
                             .error(R.drawable.ic_user))
                     .into(ivAvatar);
+        }
+
+        // Fetch other user's role to show/hide teacher badge
+        if (otherUid != null && ivTeacherBadge != null) {
+            FirebaseDatabase.getInstance().getReference("users").child(otherUid).child("role")
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String role = snapshot.getValue(String.class);
+                            ivTeacherBadge.setVisibility(
+                                    "teacher".equals(role) ? View.VISIBLE : View.GONE);
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) { /* silent */ }
+                    });
         }
 
         findViewById(R.id.backBtn).setOnClickListener(v -> finish());

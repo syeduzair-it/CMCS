@@ -14,7 +14,7 @@
         android:background="@color/colorPrimary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-    <!-- Content scroll -->
+    <!-- Scrollable content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -27,88 +27,150 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Title field -->
-            <com.google.android.material.textfield.TextInputLayout
+            <!-- ── Content card ─────────────────────────────────────── -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Notice Title"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etNoticeTitle"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionNext"
-                    android:inputType="text"
-                    android:maxLines="2"
-                    android:textColor="@color/textPrimary" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <!-- Description field -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:hint="Description"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    <!-- Title field -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Notice Title"
+                        app:boxStrokeWidthFocused="2dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etNoticeDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:inputType="textMultiLine"
-                    android:minLines="4"
-                    android:textColor="@color/textPrimary" />
-            </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNoticeTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionNext"
+                            android:inputType="text"
+                            android:maxLines="2"
+                            android:textColor="@color/textPrimary" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Media Picker Row -->
-            <LinearLayout
+                    <!-- Description field -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:hint="Description"
+                        app:boxStrokeWidthFocused="2dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNoticeDescription"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="top"
+                            android:inputType="textMultiLine"
+                            android:minLines="4"
+                            android:textColor="@color/textPrimary" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ── Attach media card ────────────────────────────────── -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnPickMedia"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:clickable="true"
+                android:focusable="true"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white"
+                app:rippleColor="@color/surfaceElevated">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnPickMedia"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Attach Media"
-                    app:icon="@drawable/ic_attach"
-                    app:strokeColor="@color/colorPrimary"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/tvMediaName"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/textSecondary"
-                    android:textSize="13sp" />
+                    <!-- Circle icon background -->
+                    <FrameLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_attach_circle">
 
-                <ImageButton
-                    android:id="@+id/btnRemoveMedia"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Remove media"
-                    android:src="@drawable/ic_delete"
-                    android:visibility="gone" />
-            </LinearLayout>
+                        <!-- Programmatic circle shape via background -->
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_attach"
+                            app:tint="@color/colorPrimary"
+                            android:contentDescription="Attach" />
+                    </FrameLayout>
 
-            <!-- Media Preview -->
-            <FrameLayout
+                    <!-- Text labels -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Attach Media"
+                            android:textColor="@color/textPrimary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvMediaName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="Tap to select image, PDF or video"
+                            android:textColor="@color/textSecondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <!-- Remove button (shown when file selected) -->
+                    <ImageButton
+                        android:id="@+id/btnRemoveMedia"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Remove media"
+                        android:src="@drawable/ic_close"
+                        android:visibility="gone"
+                        app:tint="@color/textSecondary" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ── Media preview card ───────────────────────────────── -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/mediaPreview"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/surfaceElevated"
-                android:visibility="gone">
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/surfaceElevated">
 
+                <!-- Image preview -->
                 <ImageView
                     android:id="@+id/ivPreview"
                     android:layout_width="match_parent"
@@ -116,6 +178,7 @@
                     android:scaleType="centerCrop"
                     android:visibility="gone" />
 
+                <!-- Non-image preview (PDF / video) -->
                 <LinearLayout
                     android:id="@+id/nonImagePreview"
                     android:layout_width="wrap_content"
@@ -139,9 +202,10 @@
                         android:textColor="@color/textSecondary"
                         android:textSize="14sp" />
                 </LinearLayout>
-            </FrameLayout>
 
-            <!-- Upload progress -->
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ── Upload progress ──────────────────────────────────── -->
             <LinearLayout
                 android:id="@+id/uploadProgressLayout"
                 android:layout_width="match_parent"
@@ -168,15 +232,18 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Save Button -->
+    <!-- ── Publish button ──────────────────────────────────────────────── -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSaveNotice"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_margin="16dp"
-        android:text="Publish Notice"
+        android:text="Publish Notice 🚀"
+        android:textAllCaps="false"
         android:textColor="@color/white"
+        android:textSize="16sp"
         app:backgroundTint="@color/colorPrimary"
-        app:cornerRadius="12dp" />
+        app:cornerRadius="16dp"
+        app:elevation="6dp" />
 
 </LinearLayout>

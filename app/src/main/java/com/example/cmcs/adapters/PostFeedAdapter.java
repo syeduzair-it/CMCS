@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -101,12 +102,24 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostFe
 
             if (holder.exoPlayer != null) {
                 holder.exoPlayer.release();
+                holder.exoPlayer = null;
             }
 
             ExoPlayer player = new ExoPlayer.Builder(context).build();
             player.setRepeatMode(Player.REPEAT_MODE_ONE);
             holder.exoPlayer = player;
             holder.exoPlayerView.setPlayer(player);
+
+            // Buffering indicator
+            player.addListener(new Player.Listener() {
+                @Override
+                public void onPlaybackStateChanged(int state) {
+                    if (holder.pbBuffering != null) {
+                        holder.pbBuffering.setVisibility(
+                                state == Player.STATE_BUFFERING ? View.VISIBLE : View.GONE);
+                    }
+                }
+            });
 
             MediaItem mediaItem = MediaItem.fromUri(post.getMediaUrl());
             player.setMediaItem(mediaItem);
@@ -115,6 +128,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostFe
 
         } else {
             holder.exoPlayerView.setVisibility(View.GONE);
+            holder.pbBuffering.setVisibility(View.GONE);
             holder.ivPostImage.setVisibility(View.VISIBLE);
             if (holder.exoPlayer != null) {
                 holder.exoPlayer.release();
@@ -174,6 +188,14 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostFe
         }
     }
 
+    @Override
+    public void onViewDetachedFromWindow(@NonNull PostFeedViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        if (holder.exoPlayer != null) {
+            holder.exoPlayer.setPlayWhenReady(false);
+        }
+    }
+
     public void playVideoAtPosition(int position, RecyclerView recyclerView) {
         if (position == playingPosition) {
             return;
@@ -224,6 +246,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostFe
         ImageButton btnPostDelete;
         ImageView ivPostImage, btnPostLike;
         PlayerView exoPlayerView;
+        ProgressBar pbBuffering;
         ExoPlayer exoPlayer;
 
         public PostFeedViewHolder(@NonNull View itemView) {
@@ -237,6 +260,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostFe
             ivPostImage = itemView.findViewById(R.id.ivPostImage);
             btnPostLike = itemView.findViewById(R.id.btnPostLike);
             exoPlayerView = itemView.findViewById(R.id.exoPlayerView);
+            pbBuffering = itemView.findViewById(R.id.pbBuffering);
         }
     }
 }

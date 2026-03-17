@@ -2,6 +2,8 @@ package com.example.cmcs;
 
 import android.app.Application;
 
+import androidx.appcompat.app.AppCompatDelegate;
+
 import com.cloudinary.android.MediaManager;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -18,6 +20,9 @@ public class CMCSApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // Force light mode globally — app is not designed for dark mode
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         // Enable local disk persistence so the chat list stays visible offline
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 

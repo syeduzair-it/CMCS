@@ -80,12 +80,15 @@ public class NotesSubjectActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.ns_toolbar);
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
-        toolbar.setTitle(course + " — Year " + year);
+        toolbar.setTitle(course.toUpperCase() + " — Year " + year);
+
+        android.util.Log.d("PATH_DEBUG",
+                dept + "/" + NotesClassActivity.normalizeCourse(course) + "/" + year);
 
         subjectsRef = FirebaseDatabase.getInstance()
                 .getReference("notes")
                 .child(NotesClassActivity.sanitize(dept))
-                .child(NotesClassActivity.sanitize(course))
+                .child(NotesClassActivity.normalizeCourse(course))
                 .child(NotesClassActivity.sanitize(year));
 
         if ("teacher".equals(role)) {

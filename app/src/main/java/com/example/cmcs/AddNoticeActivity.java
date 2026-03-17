@@ -23,6 +23,7 @@ import com.example.cmcs.models.NoticeModel;
 import com.example.cmcs.utils.CloudinaryUploader;
 import com.example.cmcs.utils.WindowInsetsHelper;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -65,10 +66,11 @@ public class AddNoticeActivity extends AppCompatActivity {
 
     // UI
     private TextInputEditText etTitle, etDescription;
-    private MaterialButton btnPickMedia, btnSaveNotice;
+    private View btnPickMedia;           // MaterialCardView in layout
+    private MaterialButton btnSaveNotice;
     private ImageButton btnRemoveMedia;
     private TextView tvMediaName;
-    private FrameLayout mediaPreview;
+    private com.google.android.material.card.MaterialCardView mediaPreview;
     private ImageView ivPreview, ivMediaTypeIcon;
     private LinearLayout nonImagePreview, uploadProgressLayout;
     private TextView tvMediaTypeLabel;
@@ -125,18 +127,18 @@ public class AddNoticeActivity extends AppCompatActivity {
 
     // ── Init ──────────────────────────────────────────────────────────────
     private void bindViews() {
-        etTitle = findViewById(R.id.etNoticeTitle);
-        etDescription = findViewById(R.id.etNoticeDescription);
-        btnPickMedia = findViewById(R.id.btnPickMedia);
-        btnSaveNotice = findViewById(R.id.btnSaveNotice);
-        btnRemoveMedia = findViewById(R.id.btnRemoveMedia);
-        tvMediaName = findViewById(R.id.tvMediaName);
-        mediaPreview = findViewById(R.id.mediaPreview);
-        ivPreview = findViewById(R.id.ivPreview);
-        ivMediaTypeIcon = findViewById(R.id.ivMediaTypeIcon);
-        nonImagePreview = findViewById(R.id.nonImagePreview);
+        etTitle             = findViewById(R.id.etNoticeTitle);
+        etDescription       = findViewById(R.id.etNoticeDescription);
+        btnPickMedia        = findViewById(R.id.btnPickMedia);
+        btnSaveNotice       = findViewById(R.id.btnSaveNotice);
+        btnRemoveMedia      = findViewById(R.id.btnRemoveMedia);
+        tvMediaName         = findViewById(R.id.tvMediaName);
+        mediaPreview        = findViewById(R.id.mediaPreview);
+        ivPreview           = findViewById(R.id.ivPreview);
+        ivMediaTypeIcon     = findViewById(R.id.ivMediaTypeIcon);
+        nonImagePreview     = findViewById(R.id.nonImagePreview);
         uploadProgressLayout = findViewById(R.id.uploadProgressLayout);
-        tvMediaTypeLabel = findViewById(R.id.tvMediaTypeLabel);
+        tvMediaTypeLabel    = findViewById(R.id.tvMediaTypeLabel);
     }
 
     private void readIntent() {
@@ -206,7 +208,9 @@ public class AddNoticeActivity extends AppCompatActivity {
     private void showPickedMediaPreview() {
         mediaPreview.setVisibility(View.VISIBLE);
         btnRemoveMedia.setVisibility(View.VISIBLE);
-        tvMediaName.setText(pickedMediaUri.getLastPathSegment());
+        // Update subtitle in attach card to show selected filename
+        String segment = pickedMediaUri.getLastPathSegment();
+        tvMediaName.setText(segment != null ? segment : "File selected");
 
         if ("image".equals(pickedMimeType)) {
             ivPreview.setVisibility(View.VISIBLE);
@@ -226,7 +230,7 @@ public class AddNoticeActivity extends AppCompatActivity {
         pickedMimeType = null;
         mediaPreview.setVisibility(View.GONE);
         btnRemoveMedia.setVisibility(View.GONE);
-        tvMediaName.setText("");
+        tvMediaName.setText("Tap to select image, PDF or video");
     }
 
     // ── Save Logic ────────────────────────────────────────────────────────
@@ -406,6 +410,7 @@ public class AddNoticeActivity extends AppCompatActivity {
     private void setBusy(boolean busy) {
         btnSaveNotice.setEnabled(!busy);
         btnPickMedia.setEnabled(!busy);
+        btnPickMedia.setAlpha(busy ? 0.5f : 1f);
     }
 
     private void toast(String msg) {

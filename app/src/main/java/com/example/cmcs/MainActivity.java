@@ -5,6 +5,10 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,7 +18,6 @@ import com.example.cmcs.fragments.ChatsFragment;
 import com.example.cmcs.fragments.HomeFragment;
 import com.example.cmcs.fragments.MeFragment;
 import com.example.cmcs.fragments.NoticeFragment;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -32,7 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MaterialToolbar       toolbar;
+    private TextView              tvToolbarTitle;
+    private ImageView             ivMenu;
     private BottomNavigationView  bottomNavView;
     private FloatingActionButton  fabScanner;
     private FloatingActionButton  fabAction;
@@ -64,22 +68,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toolbar       = findViewById(R.id.toolbar);
+        tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
+        ivMenu        = findViewById(R.id.ivMenu);
         bottomNavView = findViewById(R.id.bottomNavView);
         fabScanner    = findViewById(R.id.fabScanner);
         fabAction     = findViewById(R.id.fabAction);
 
-        setSupportActionBar(toolbar);
+        ivMenu.setOnClickListener(v -> showToolbarMenu(v));
 
-        toolbar.setNavigationOnClickListener(v -> {
-            if (currentFragment instanceof ChatsFragment) {
-                ((ChatsFragment) currentFragment).openDrawer();
-            } else if (currentFragment instanceof MeFragment) {
-                ((MeFragment) currentFragment).openDrawer();
-            }
-        });
-
-        loadFragment(new HomeFragment(), "Home");
+        loadFragment(new HomeFragment(), "CMCS");
         bottomNavView.setSelectedItemId(R.id.nav_home);
 
         bottomNavView.setOnItemSelectedListener(item -> {
@@ -88,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             String title = "CMCS";
 
             if (id == R.id.nav_home) {
-                f = new HomeFragment(); title = "Home";
+                f = new HomeFragment(); title = "CMCS";
             } else if (id == R.id.nav_chats) {
                 f = new ChatsFragment(); title = "Chats";
             } else if (id == R.id.nav_notice) {
@@ -218,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_TEACHER_NOTICE_SEEN = "teacher_last_notice_seen";
 
     /**
-     * STUDENT: checks noticeViews/{noticeId}/viewers/{uid} — Firebase-driven.
+     * STUDENT: checks noticeViews/{noticeId}/{uid} — Firebase-driven.
      * TEACHER: compares notice.timestamp against locally stored last-seen time.
      *          No reads/writes to noticeViews for teachers.
      */
@@ -313,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** Student badge: Firebase noticeViews/{id}/viewers/{uid} check. */
+    /** Student badge: Firebase noticeViews/{id}/{uid} check. */
     private void recomputeNoticeBadgeForStudent() {
         List<String> paths = new ArrayList<>();
         paths.add("notices/college");
@@ -343,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
                             for (String noticeId : ids) {
                                 FirebaseDatabase.getInstance()
                                         .getReference("noticeViews")
-                                        .child(noticeId).child("viewers").child(currentUid)
+                                        .child(noticeId).child(currentUid)
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override public void onDataChange(@NonNull DataSnapshot s) {
                                                 if (!s.exists()) unreadTotal.incrementAndGet();
@@ -443,7 +440,7 @@ public class MainActivity extends AppCompatActivity {
         notesBadgeRef = FirebaseDatabase.getInstance()
                 .getReference("notes")
                 .child(sanitize(currentDept))
-                .child(sanitize(currentCourse))
+                .child(currentCourse != null ? currentCourse.trim().toLowerCase() : "_")
                 .child(sanitize(currentYear));
 
         notesBadgeListener = new ValueEventListener() {
@@ -507,13 +504,7 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
 
-        if (getSupportActionBar() != null) getSupportActionBar().setTitle(title);
-
-        if (fragment instanceof ChatsFragment || fragment instanceof MeFragment) {
-            toolbar.setNavigationIcon(R.drawable.ic_menu);
-        } else {
-            toolbar.setNavigationIcon(null);
-        }
+        if (tvToolbarTitle != null) tvToolbarTitle.setText(title);
 
         configureActionFabForFragment(fragment);
     }
@@ -557,12 +548,55 @@ public class MainActivity extends AppCompatActivity {
 
     public void setDrawerLockMode(int lockMode, View drawerView) { /* no-op */ }
 
-    public void openDrawer() {
-        if (currentFragment instanceof ChatsFragment) {
-            ((ChatsFragment) currentFragment).openDrawer();
-        } else if (currentFragment instanceof MeFragment) {
-            ((MeFragment) currentFragment).openDrawer();
+    // ── Toolbar popup menu ────────────────────────────────────────────────
+
+    private void showToolbarMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.inflate(R.menu.toolbar_menu);
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.menu_settings) {
+                startActivityIfExists("com.example.cmcs.SettingsActivity");
+            } else if (id == R.id.menu_magazine) {
+                startActivityIfExists("com.example.cmcs.MagazineActivity");
+            } else if (id == R.id.menu_about_cmcs) {
+                startActivityIfExists("com.example.cmcs.AboutCMCSActivity");
+            } else if (id == R.id.menu_about_sanstha) {
+                startActivityIfExists("com.example.cmcs.AboutSansthaActivity");
+            } else if (id == R.id.menu_license) {
+                startActivityIfExists("com.example.cmcs.LicenseActivity");
+            } else if (id == R.id.menu_about_developer) {
+                startActivityIfExists("com.example.cmcs.DeveloperActivity");
+            } else if (id == R.id.menu_report_bug) {
+                startActivityIfExists("com.example.cmcs.BugReportActivity");
+            } else if (id == R.id.menu_app_version) {
+                showAppVersionDialog();
+            }
+            return true;
+        });
+        popup.show();
+    }
+
+    private void startActivityIfExists(String className) {
+        try {
+            startActivity(new Intent(this, Class.forName(className)));
+        } catch (ClassNotFoundException e) {
+            Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void showAppVersionDialog() {
+        String version;
+        try {
+            version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            version = "Unknown";
+        }
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("App Version")
+                .setMessage("CMCS v" + version)
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     // ── Path helpers (mirrors ClassNoticeFragment) ────────────────────────

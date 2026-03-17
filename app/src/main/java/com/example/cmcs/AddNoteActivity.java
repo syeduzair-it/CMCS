@@ -111,11 +111,13 @@ public class AddNoteActivity extends AppCompatActivity {
 
         setBusy(true);
 
+        android.util.Log.d("PATH_DEBUG", dept + "/" + NotesClassActivity.normalizeCourse(course) + "/" + year);
+
         // Build DB reference for this subject
         DatabaseReference subjectRef = FirebaseDatabase.getInstance()
                 .getReference("notes")
                 .child(NotesClassActivity.sanitize(dept))
-                .child(NotesClassActivity.sanitize(course))
+                .child(NotesClassActivity.normalizeCourse(course))
                 .child(NotesClassActivity.sanitize(year))
                 .child(subject != null ? subject : "_");
 

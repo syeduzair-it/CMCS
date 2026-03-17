@@ -32,8 +32,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Adapter for the notice list.
@@ -41,16 +43,16 @@ import java.util.Locale;
  * View-tracking design (scalable to 1500+ students):
  *
  *   Firebase structure:
- *     noticeViews/{noticeId}/viewers/{uid} = true
+ *     noticeViews/{noticeId}/{uid} = { role, name, timestamp }
  *
  *   Student path:
  *     onViewAttachedToWindow fires when a card genuinely enters the screen.
- *     We check viewers/{uid} first; only if absent do we write the entry.
- *     One write per student per notice, ever.
+ *     We check {uid} first; only if absent do we write the entry.
+ *     One write per student per notice, ever. Teachers are NEVER written.
  *
  *   Teacher path:
- *     A single-event read on noticeViews/{noticeId}/viewers derives the count
- *     via snapshot.getChildrenCount(). No persistent listener needed.
+ *     A single-event read on noticeViews/{noticeId} counts only children
+ *     where role == "student". Count always matches the viewers list exactly.
  */
 public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeViewHolder> {
 
@@ -58,14 +60,16 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
     private final List<NoticeModel> notices;
     private final String            currentUid;
     private final String            currentRole;
+    private final String            currentName;
     private final String            dbPath;
 
     public NoticeAdapter(Context context, List<NoticeModel> notices,
-            String currentUid, String currentRole, String dbPath) {
+            String currentUid, String currentRole, String currentName, String dbPath) {
         this.context     = context;
         this.notices     = notices;
         this.currentUid  = currentUid;
         this.currentRole = currentRole;
+        this.currentName = currentName;
         this.dbPath      = dbPath;
     }
 
@@ -150,21 +154,25 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
     // ── View count (teacher) ──────────────────────────────────────────────
 
     /**
-     * Reads noticeViews/{noticeId}/viewers once and derives the count from
-     * snapshot.getChildrenCount(). No persistent listener — teachers get a
-     * fresh count each time the card appears on screen.
+     * Real-time listener on noticeViews/{noticeId}.
+     * Counts only children where role == "student" — teachers excluded.
+     * Count always matches the viewers list exactly.
      */
     private void loadViewCount(@NonNull NoticeViewHolder h, String noticeId) {
         FirebaseDatabase.getInstance()
                 .getReference("noticeViews")
                 .child(noticeId)
-                .child("viewers")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        long count = snapshot.getChildrenCount();
-                        h.tvViewCount.setText("\uD83D\uDC41 " + count
-                                + (count == 1 ? " view" : " views"));
+                        long count = 0;
+                        for (DataSnapshot child : snapshot.getChildren()) {
+                            String role = child.child("role").getValue(String.class);
+                            if ("student".equals(role)) count++;
+                        }
+                        final long finalCount = count;
+                        h.tvViewCount.setText("\uD83D\uDC41 " + finalCount
+                                + (finalCount == 1 ? " view" : " views"));
                     }
 
                     @Override
@@ -180,27 +188,36 @@ public class NoticeAdapter extends RecyclerView.Adapter<NoticeAdapter.NoticeView
     // ── Student view recording ─────────────────────────────────────────────
 
     /**
-     * Writes noticeViews/{noticeId}/viewers/{uid} = true, but only if the
-     * entry doesn't already exist. One cheap leaf-node read guards against
-     * duplicate writes.
+     * Writes noticeViews/{noticeId}/{uid} = { role, timestamp } only if the
+     * entry doesn't already exist. Teachers are never written.
+     * Uses uid as key — no push() — so each user is counted exactly once.
      */
     private void recordStudentView(String noticeId) {
         if (!isValidNoticeId(noticeId)) return;
         if (currentUid == null || currentUid.isEmpty()) return;
-        if (!"student".equalsIgnoreCase(currentRole)) return;
+        if (!"student".equalsIgnoreCase(currentRole)) return; // teachers excluded
 
         DatabaseReference viewerRef = FirebaseDatabase.getInstance()
                 .getReference("noticeViews")
                 .child(noticeId)
-                .child("viewers")
                 .child(currentUid);
 
         viewerRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) return; // already recorded
+                if (snapshot.exists()) return; // already recorded — no duplicate
 
-                viewerRef.setValue(true)
+                java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                data.put("role", "student");
+                data.put("timestamp", System.currentTimeMillis());
+                if (currentName != null && !currentName.isEmpty()) {
+                    data.put("name", currentName);
+                }
+
+                viewerRef.setValue(data)
+                        .addOnSuccessListener(v ->
+                                android.util.Log.d("NOTICE_VIEW",
+                                        "User viewed: " + currentUid + " notice: " + noticeId))
                         .addOnFailureListener(e ->
                                 android.util.Log.e("NoticeAdapter",
                                         "Failed to write viewer entry: " + e.getMessage()));

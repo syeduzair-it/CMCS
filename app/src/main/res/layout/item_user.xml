@@ -4,10 +4,12 @@
 
   Structure:
   ConstraintLayout
-    ├── CircleImageView  – avatar (48dp, purple border)
-    ├── TextView  name   – bold 15sp
-    ├── TextView  subtitle – "Student · CS · Year 2" or "Teacher · Computer"
-    └── TextView  teacher badge – purple pill, GONE for students
+    ├── FrameLayout (avatar + teacher badge overlay)
+    │     ├── CircleImageView  – avatar
+    │     └── ImageView        – teacher badge (bottom|end, teachers only)
+    ├── TextView  name
+    ├── TextView  subtitle
+    └── CheckBox  (group selection mode)
 -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -21,17 +23,39 @@
     android:paddingTop="10dp"
     android:paddingBottom="10dp">
 
-    <!-- Avatar -->
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/user_avatar"
+    <!-- Avatar + teacher badge overlay -->
+    <FrameLayout
+        android:id="@+id/user_avatar_frame"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:src="@drawable/ic_drawer_profile"
-        app:civ_border_color="@color/surfaceElevated"
-        app:civ_border_width="1.5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/user_avatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_drawer_profile"
+            app:civ_border_color="@color/surfaceElevated"
+            app:civ_border_width="1.5dp" />
+
+        <!-- Teacher verification badge — bottom-right corner -->
+        <ImageView
+            android:id="@+id/user_teacher_badge"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/ic_teacher_badge_dark"
+            android:src="@drawable/ic_teacher"
+            android:tint="@color/white"
+            style="@style/ShapeAppearance.Material3.Tooltip"
+            android:padding="4dp"
+            android:elevation="2dp"
+            android:visibility="gone"
+            android:importantForAccessibility="no" />
+
+    </FrameLayout>
 
     <!-- Name -->
     <TextView
@@ -45,30 +69,11 @@
         android:textColor="@color/textPrimary"
         android:textSize="15sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@id/user_teacher_badge"
-        app:layout_constraintStart_toEndOf="@id/user_avatar"
-        app:layout_constraintTop_toTopOf="@id/user_avatar"
+        app:layout_constraintEnd_toStartOf="@id/user_checkbox"
+        app:layout_constraintStart_toEndOf="@id/user_avatar_frame"
+        app:layout_constraintTop_toTopOf="@id/user_avatar_frame"
         tools:text="Ahmad Raza" />
 
-    <!-- Teacher badge pill (visible only for teachers) -->
-    <TextView
-        android:id="@+id/user_teacher_badge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/badge_teacher_bg"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp"
-        android:text="Teacher"
-        android:textColor="@color/white"
-        android:textSize="10sp"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/user_name"
-        app:layout_constraintEnd_toStartOf="@id/user_checkbox"
-        app:layout_constraintTop_toTopOf="@id/user_name" />
-    
     <!-- Checkbox for group selection -->
     <CheckBox
         android:id="@+id/user_checkbox"
@@ -91,9 +96,9 @@
         android:maxLines="1"
         android:textColor="@color/textSecondary"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@id/user_avatar"
+        app:layout_constraintBottom_toBottomOf="@id/user_avatar_frame"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/user_avatar"
+        app:layout_constraintStart_toEndOf="@id/user_avatar_frame"
         app:layout_constraintTop_toBottomOf="@id/user_name"
         tools:text="Student · CS · Year 2" />
 

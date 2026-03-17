@@ -9,6 +9,7 @@ public class ViewerModel {
     private String name;
     private String profileImage;
     private long   timestamp;
+    private String role;
 
     public ViewerModel() {}
 
@@ -36,4 +37,7 @@ public class ViewerModel {
 
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

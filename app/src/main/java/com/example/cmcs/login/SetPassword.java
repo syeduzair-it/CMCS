@@ -42,6 +42,9 @@ public class SetPassword extends AppCompatActivity {
         etConfirmPassword = findViewById(R.id.editConfirmPassword);
         btnSetPassword = findViewById(R.id.btnSetPassword);
 
+        // Back button
+        findViewById(R.id.backArrow).setOnClickListener(v -> finish());
+
         mAuth = FirebaseAuth.getInstance();
         dbRef = FirebaseDatabase.getInstance().getReference();
 

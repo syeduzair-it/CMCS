@@ -42,6 +42,9 @@ public class StoryViewersAdapter extends RecyclerView.Adapter<StoryViewersAdapte
                 .placeholder(R.drawable.ic_user)
                 .circleCrop()
                 .into(holder.ivImage);
+
+        holder.ivTeacherBadge.setVisibility(
+                "teacher".equals(model.getRole()) ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -53,11 +56,13 @@ public class StoryViewersAdapter extends RecyclerView.Adapter<StoryViewersAdapte
 
         TextView tvName;
         android.widget.ImageView ivImage;
+        android.widget.ImageView ivTeacherBadge;
 
         VH(@NonNull View v) {
             super(v);
-            tvName  = v.findViewById(R.id.tvViewerName);
-            ivImage = v.findViewById(R.id.ivViewerImage);
+            tvName         = v.findViewById(R.id.tvViewerName);
+            ivImage        = v.findViewById(R.id.ivViewerImage);
+            ivTeacherBadge = v.findViewById(R.id.iv_viewer_teacher_badge);
         }
     }
 }

@@ -1,25 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  activity_highlight_viewer.xml
-  Full-screen highlight viewer:
-    AppBarLayout (title + close + delete/add-media for teachers)
-    ImageView for images + VideoView for videos
-    Left/Right tap zones
+  Z-order (bottom → top):
+    1. Media (image / video)
+    2. Top gradient
+    3. Progress bars
+    4. Tap zones  ← navigation, full-height but below the top bar
+    5. Top bar    ← drawn last so buttons are always on top and clickable
+    6. Empty state
 -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/hv_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="#000000"
+    android:clickable="true"
+    android:focusable="true">
 
-    <!-- Media views -->
+    <!-- 1. Media layers -->
     <ImageView
         android:id="@+id/hv_ivImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="Highlight image"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true" />
 
     <VideoView
         android:id="@+id/hv_vvVideo"
@@ -27,7 +32,14 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <!-- Progress bars -->
+    <!-- 2. Top gradient overlay -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:layout_gravity="top"
+        android:background="@drawable/gradient_black_top" />
+
+    <!-- 3. Progress bars -->
     <LinearLayout
         android:id="@+id/hv_llProgressBars"
         android:layout_width="match_parent"
@@ -35,89 +47,125 @@
         android:layout_gravity="top"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="56dp"
-        android:paddingBottom="8dp" />
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="52dp"
+        android:paddingBottom="6dp" />
 
-    <!-- Top bar: back + title + add media (teacher) -->
+    <!-- 4. Tap zones — declared BEFORE top bar so they sit below it in z-order.
+         The top ~100dp is excluded via marginTop so taps there reach the buttons. -->
+    <View
+        android:id="@+id/hv_tapLeft"
+        android:layout_width="90dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:layout_marginTop="100dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <View
+        android:id="@+id/hv_tapRight"
+        android:layout_width="90dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:layout_marginTop="100dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- 5. Top bar — declared LAST so it is always on top of tap zones -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="8dp">
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="64dp"
+        android:paddingBottom="8dp">
 
         <ImageButton
             android:id="@+id/hv_btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            android:background="@drawable/bg_circle_transparent"
             android:contentDescription="Back"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white" />
+            android:tint="@color/white"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true" />
 
         <TextView
             android:id="@+id/hv_tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="10dp"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
             android:shadowColor="#80000000"
-            android:shadowRadius="3" />
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="4" />
 
-        <!-- Teacher: add more media -->
         <ImageButton
             android:id="@+id/hv_btnAddMedia"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_circle_transparent"
             android:contentDescription="Add media"
-            android:src="@drawable/ic_attach"
+            android:src="@drawable/ic_add"
             android:tint="@color/white"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
             android:visibility="gone" />
 
-        <!-- Teacher: delete current media -->
         <ImageButton
             android:id="@+id/hv_btnDeleteMedia"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_circle_transparent"
             android:contentDescription="Delete media"
             android:src="@drawable/ic_delete"
             android:tint="@color/white"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
             android:visibility="gone" />
 
     </LinearLayout>
 
-    <!-- Left/right tap zones -->
-    <View
-        android:id="@+id/hv_tapLeft"
-        android:layout_width="80dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start" />
-
-    <View
-        android:id="@+id/hv_tapRight"
-        android:layout_width="80dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="end" />
-
-    <!-- Empty state -->
-    <TextView
-        android:id="@+id/hv_tvEmpty"
+    <!-- 6. Empty state -->
+    <LinearLayout
+        android:id="@+id/hv_emptyState"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="No media in this highlight"
-        android:textColor="@color/white"
-        android:textSize="16sp"
-        android:visibility="gone" />
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_image"
+            android:tint="#80FFFFFF"
+            android:contentDescription="No highlights" />
+
+        <TextView
+            android:id="@+id/hv_tvEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="No highlights yet"
+            android:textColor="#CCFFFFFF"
+            android:textSize="16sp" />
+
+    </LinearLayout>
 
 </FrameLayout>

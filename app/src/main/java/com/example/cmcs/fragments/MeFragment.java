@@ -19,7 +19,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -32,8 +31,6 @@ import com.example.cmcs.adapters.MeMenuAdapter;
 import com.example.cmcs.models.MeMenuItem;
 import com.example.cmcs.models.UserModel;
 import com.example.cmcs.welcome.WelcomeActivity;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -68,10 +65,6 @@ public class MeFragment extends Fragment {
     private static final String PREFS_NAME = "cmcs_prefs";
     private static final int MAX_WIDTH = 1080;
     private static final int JPEG_QUALITY = 80;
-
-    // ── Views — Drawer ────────────────────────────────────────────────────
-    private DrawerLayout drawerLayout;
-    private NavigationView navigationView;
 
     // ── Views — Profile card ──────────────────────────────────────────────
     private CircleImageView ivProfileImage;
@@ -145,18 +138,14 @@ public class MeFragment extends Fragment {
         // 3. Init Firebase references
         initFirebase();
 
-        // 4. Wire NavigationView item clicks
-        setupNavigationDrawer();
-
-        // 5. Wire edit-image button
+        // 4. Wire edit-image button
         btnEditProfileImage.setOnClickListener(v
                 -> galleryLauncher.launch("image/*"));
 
-        // 6. Load user profile from Firebase
+        // 5. Load user profile from Firebase
         loadUserProfile();
     }
 
-    // Fix #2 — Clear Glide request on view destruction to prevent memory leaks
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -167,7 +156,6 @@ public class MeFragment extends Fragment {
         if (ivProfileImage != null) {
             Glide.with(this).clear(ivProfileImage);
         }
-        // Null out view references so GC can reclaim the view hierarchy
         ivProfileImage = null;
         btnEditProfileImage = null;
         pbUpload = null;
@@ -176,61 +164,20 @@ public class MeFragment extends Fragment {
         tvEmail = null;
         tvDepartmentOrYear = null;
         rvMenu = null;
-        drawerLayout = null;
-        navigationView = null;
     }
 
     // ─────────────────────────────────────────────────────────────────────
     // View binding
     // ─────────────────────────────────────────────────────────────────────
     private void bindViews(View view) {
-        drawerLayout = view.findViewById(R.id.me_drawer_layout);
-        navigationView = view.findViewById(R.id.me_navigation_view);
-
-        ivProfileImage = view.findViewById(R.id.ivProfileImage);
+        ivProfileImage      = view.findViewById(R.id.ivProfileImage);
         btnEditProfileImage = view.findViewById(R.id.btnEditProfileImage);
-        pbUpload = view.findViewById(R.id.pbUpload);
-        tvName = view.findViewById(R.id.tvName);
-        tvBadge = view.findViewById(R.id.tvBadge);
-        tvEmail = view.findViewById(R.id.tvEmail);
-        tvDepartmentOrYear = view.findViewById(R.id.tvDepartmentOrYear);
-        rvMenu = view.findViewById(R.id.rvMenu);
-    }
-
-    /**
-     * Called by MainActivity when toolbar navigation icon is clicked
-     */
-    public void openDrawer() {
-        if (drawerLayout != null) {
-            drawerLayout.openDrawer(navigationView);
-        }
-    }
-
-    /**
-     * Handle NavigationView item clicks.
-     */
-    private void setupNavigationDrawer() {
-        navigationView.setNavigationItemSelectedListener(item -> {
-            drawerLayout.closeDrawer(navigationView);
-
-            int id = item.getItemId();
-
-            if (id == R.id.drawer_profile) {
-                Toast.makeText(requireContext(),
-                        "Profile — coming soon!", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.drawer_settings) {
-                Toast.makeText(requireContext(),
-                        "Settings — coming soon!", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.drawer_logout) {
-                handleLogout();
-            } else if (id == R.id.drawer_about) {
-                Toast.makeText(requireContext(),
-                        "CMCS — College of Management & Computer Science",
-                        Toast.LENGTH_LONG).show();
-            }
-
-            return true;
-        });
+        pbUpload            = view.findViewById(R.id.pbUpload);
+        tvName              = view.findViewById(R.id.tvName);
+        tvBadge             = view.findViewById(R.id.tvBadge);
+        tvEmail             = view.findViewById(R.id.tvEmail);
+        tvDepartmentOrYear  = view.findViewById(R.id.tvDepartmentOrYear);
+        rvMenu              = view.findViewById(R.id.rvMenu);
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -307,42 +254,6 @@ public class MeFragment extends Fragment {
 
         // Profile image
         loadProfileImage(user.getProfileImage());
-
-        // Populate nav header in drawer with same user data
-        populateNavHeader(user);
-    }
-
-    /**
-     * Populate the DrawerLayout nav header with the user's name/role/avatar.
-     */
-    private void populateNavHeader(UserModel user) {
-        View headerView = navigationView.getHeaderView(0);
-        if (headerView == null) {
-            return;
-        }
-
-        TextView navName = headerView.findViewById(R.id.nav_header_name);
-        TextView navRole = headerView.findViewById(R.id.nav_header_role);
-        de.hdodenhof.circleimageview.CircleImageView navAvatar
-                = headerView.findViewById(R.id.nav_header_avatar);
-
-        if (navName != null) {
-            navName.setText(user.getName() != null ? user.getName() : "");
-        }
-        if (navRole != null) {
-            boolean isTeacher = "teacher".equalsIgnoreCase(user.getRole());
-            navRole.setText(isTeacher ? "Teacher" : "Student");
-        }
-        if (navAvatar != null) {
-            String imgUrl = user.getProfileImage();
-            if (imgUrl != null && !imgUrl.isEmpty()) {
-                Glide.with(this)
-                        .load(imgUrl)
-                        .placeholder(R.drawable.ic_drawer_profile)
-                        .circleCrop()
-                        .into(navAvatar);
-            }
-        }
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -378,6 +289,7 @@ public class MeFragment extends Fragment {
         items.add(new MeMenuItem("Timetable", R.drawable.ic_timetable));
         items.add(new MeMenuItem("ID Card", R.drawable.ic_id_card));
         items.add(new MeMenuItem("University ID & Password", R.drawable.ic_drawer_profile));
+        items.add(new MeMenuItem("CMCS Website", R.drawable.ic_web));
         items.add(new MeMenuItem("Logout", R.drawable.ic_drawer_logout));
         return items;
     }
@@ -386,9 +298,10 @@ public class MeFragment extends Fragment {
         List<MeMenuItem> items = new ArrayList<>();
         items.add(new MeMenuItem("My Time Table", R.drawable.ic_timetable));
         items.add(new MeMenuItem("Upload Timetable", R.drawable.ic_timetable));
-        items.add(new MeMenuItem("Uploaded Notes", R.drawable.ic_notes));
+        items.add(new MeMenuItem("Upload Notes", R.drawable.ic_notes));
         items.add(new MeMenuItem("Notices Posted", R.drawable.ic_notice));
         items.add(new MeMenuItem("ID Card", R.drawable.ic_id_card));
+        items.add(new MeMenuItem("CMCS Website", R.drawable.ic_web));
         items.add(new MeMenuItem("Logout", R.drawable.ic_drawer_logout));
         return items;
     }
@@ -420,7 +333,7 @@ public class MeFragment extends Fragment {
         notesBadgeRef = FirebaseDatabase.getInstance()
                 .getReference("notes")
                 .child(sanitize(cachedDept))
-                .child(sanitize(cachedCourse))
+                .child(cachedCourse != null ? cachedCourse.trim().toLowerCase() : "_")
                 .child(sanitize(cachedYear));
 
         notesBadgeListener = new ValueEventListener() {
@@ -511,11 +424,14 @@ public class MeFragment extends Fragment {
             case "Notes":
                 startActivity(new Intent(requireContext(), com.example.cmcs.NotesClassActivity.class));
                 break;
-            case "Uploaded Notes":
-                startActivity(new Intent(requireContext(), com.example.cmcs.NotesClassActivity.class));
+            case "Upload Notes":
+                startActivity(new Intent(requireContext(), com.example.cmcs.UploadNotesClassActivity.class));
                 break;
             case "Notices Posted":
                 startActivity(new Intent(requireContext(), com.example.cmcs.NoticesPostedActivity.class));
+                break;
+            case "CMCS Website":
+                openCmcsWebsite();
                 break;
         }
     }
@@ -641,9 +557,32 @@ public class MeFragment extends Fragment {
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // CMCS Website
+    // ─────────────────────────────────────────────────────────────────────
+    private void openCmcsWebsite() {
+        Intent intent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://www.cmcs.hjes.in/new/"));
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        try {
+            startActivity(intent);
+        } catch (android.content.ActivityNotFoundException e) {
+            Toast.makeText(getContext(), "No browser installed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // Logout
     // ─────────────────────────────────────────────────────────────────────
     private void handleLogout() {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Logout", (dialog, which) -> performLogout())
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void performLogout() {
         // 1. Clear SharedPreferences
         requireActivity()
                 .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -657,12 +596,10 @@ public class MeFragment extends Fragment {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
 
-        // Fix #6 — Smooth fade-out transition
         requireActivity().overridePendingTransition(
                 android.R.anim.fade_in,
                 android.R.anim.fade_out);
 
-        // 4. Finish all activities so back-press cannot return to the app
         requireActivity().finishAffinity();
     }
 
